@@ -186,7 +186,9 @@ const PATTERNS: Record<
   { pattern: Pattern; weight: number }[]
 > = {
   troubleshooting: [
-    { pattern: /\b(does(?:n'?t| not)\s+work|can(?:'|no)t|cannot|fail(?:ed|s)?|error|exception|crash(?:ed|es)?|timeout|broken|bug|slow|stuck|load(?:ing)? issue|permission denied|unauthorized)\b/u, weight: 3.2 },
+    { pattern: /\b(does(?:["']?n["']?t| not)\s+(?:work|load|function|start|open|connect|display|show|appear|run))\b/u, weight: 3.5 },
+    { pattern: /\bdoes\s+t\s+(?:work|load|function|start|open|connect|display|show|appear|run)\b/u, weight: 3.5 },
+    { pattern: /\b(can(?:["']?t|not)|cannot|fail(?:ed|s)?|error|exception|crash(?:ed|es)?|timeout|broken|bug|slow|stuck|load(?:ing)? issue|permission denied|unauthorized|problem|issue|not working|won't work|doesn't work)\b/u, weight: 3.2 },
   ],
   download_request: [
     { pattern: RX.download, weight: 2.6 },
