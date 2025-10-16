@@ -1,0 +1,328 @@
+/* Help Panel Styles */
+
+.help-panel-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  background: var(--secondary-bg);
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(79, 157, 216, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(0, 51, 153, 0.02) 0%, transparent 50%);
+  scroll-behavior: smooth;
+}
+
+.help-panel {
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: 20px 24px;
+  animation: slideDown 0.3s ease-out;
+  max-width: 100%;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+/* Webkit scrollbar styling */
+.help-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.help-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.help-panel::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.help-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.help-close-button {
+  background: rgba(79, 157, 216, 0.1);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: bold;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.help-close-button:hover {
+  background: rgba(79, 157, 216, 0.2);
+  transform: scale(1.05);
+}
+
+.help-close-button:focus {
+  outline: 2px solid var(--eurostat-blue);
+  outline-offset: 2px;
+}
+
+.help-header .help-icon {
+  color: var(--eurostat-blue);
+}
+
+.help-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.help-section {
+  margin-bottom: 24px;
+}
+
+.help-section:last-child {
+  margin-bottom: 16px;
+}
+
+.help-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.help-examples {
+  background: var(--eurostat-light-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px;
+  margin-top: 8px;
+}
+
+.help-examples strong {
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.help-examples ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.help-examples li {
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--eurostat-light-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s ease;
+}
+
+.shortcut-item:hover {
+  background: var(--eurostat-white);
+  border-color: var(--eurostat-blue);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 51, 153, 0.1);
+}
+
+.shortcut-keys {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.shortcut-keys span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: normal;
+}
+
+.shortcut-desc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.shortcut-desc svg {
+  color: var(--eurostat-blue);
+  flex-shrink: 0;
+}
+
+.help-panel kbd {
+  background: var(--eurostat-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  box-shadow: 0 1px 0 rgba(0, 51, 153, 0.1);
+  color: var(--text-primary);
+  display: inline-block;
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1;
+  padding: 2px 6px;
+  white-space: nowrap;
+  min-width: 20px;
+  text-align: center;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.feature-item svg {
+  color: var(--eurostat-blue);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.feature-item strong {
+  color: var(--text-primary);
+}
+
+.help-footer {
+  background: linear-gradient(135deg, var(--eurostat-light-blue), var(--eurostat-blue));
+  color: var(--eurostat-white);
+  padding: 12px 16px;
+  border-radius: var(--border-radius-md);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-top: 16px;
+}
+
+.help-footer p {
+  margin: 0;
+}
+
+.help-footer strong {
+  color: var(--eurostat-white);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .help-panel {
+    padding: 16px 20px;
+  }
+
+  .shortcuts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shortcut-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .shortcut-keys {
+    align-self: flex-start;
+  }
+}
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus management for screen readers */
+.sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .help-panel {
+    border: 2px solid;
+  }
+
+  .shortcut-item {
+    border: 2px solid;
+  }
+
+  .help-examples {
+    border: 2px solid;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .help-panel {
+    animation: none;
+  }
+
+  .shortcut-item {
+    transition: none;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
