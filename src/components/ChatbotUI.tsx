@@ -1,9 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { resolveIntents } from '../utils/intentDetection';
-import { preprocessInput } from '../utils/preprocess';
-import { extractEntities } from '../utils/entityExtractor';
-import { resolveResponse } from '../utils/responseResolver';
-import chatInsightsStore from '../state/globalChatState';
+import { processAndRespond } from '../utils/messageProcessor';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useAriaLive } from '../utils/accessibility';
 import './ChatbotUI.css';
@@ -105,27 +101,8 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
     setLoading(true);
 
     try {
-       //process the input 
-      const preprocessed = preprocessInput(input);
-        //check the intent type   
-      const resolution = resolveIntents(preprocessed.cleaned);
-        //extract the entities from the input   
-      const entities = extractEntities(preprocessed.cleaned);
-        // save the data in a global object
-      const insightEntry = chatInsightsStore.record({
-        raw: input,
-        cleaned: preprocessed.cleaned,
-        resolution,
-        entities,
-        diagnostics: {
-          corrections: preprocessed.corrections,
-          flags: preprocessed.flags,
-        },
-      });
-      console.log('Entity extraction result:', entities, insightEntry);
-
-      // Get the appropriate response based on intent and entities
-      const responseResult = await resolveResponse(resolution, entities);
+      // Process the message and generate response (complete pipeline)
+      const responseResult = await processAndRespond(input);
 
       const botMessage: Message = {
         text: responseResult.text,
