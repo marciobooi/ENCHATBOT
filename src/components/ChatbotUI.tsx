@@ -142,7 +142,7 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
       setLoading(false);
       announceStatus('Ready for next message');
     }
-  }, [input, loading]);
+  }, [input, loading, announceMessage, announceStatus]);
 
   // Keyboard navigation hook - disabled when in modal (modal handles focus trapping)
   const { inputRef, containerRef, handleKeyDown } = useKeyboardNavigation({

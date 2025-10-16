@@ -16,7 +16,9 @@ import {
   ArrowRightLeft
 } from 'lucide-react';
 import {
-  ScreenReaderOnly,
+  ScreenReaderOnly
+} from '../utils/accessibility-components';
+import {
   useAriaIds
 } from '../utils/accessibility';
 import './HelpPanel.css';

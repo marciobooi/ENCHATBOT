@@ -3,7 +3,7 @@
  * Comprehensive accessibility helpers following WCAG 2.1 AA guidelines
  */
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
 // FOCUS MANAGEMENT
@@ -198,7 +198,7 @@ export const useAriaLive = (priority: 'polite' | 'assertive' = 'polite') => {
 
   return useCallback((message: string) => {
     announcer.announce(message, priority);
-  }, [priority]);
+  }, [priority, announcer]);
 };
 
 /**
@@ -267,45 +267,6 @@ export const matchesKeyPattern = (
 
 // ============================================================================
 // SKIP LINKS
-// ============================================================================
-
-/**
- * Skip link component props
- */
-export interface SkipLinkProps {
-  href: string;
-  children: React.ReactNode;
-  className?: string;
-}
-
-/**
- * Skip link component for keyboard navigation
- */
-export const SkipLink: React.FC<SkipLinkProps> = ({ href, children, className }) => {
-  return (
-    <a
-      href={href}
-      className={`skip-link ${className || ''}`}
-      onFocus={(e) => {
-        e.target.style.position = 'static';
-        e.target.style.clip = 'auto';
-        e.target.style.height = 'auto';
-        e.target.style.width = 'auto';
-        e.target.style.overflow = 'visible';
-      }}
-      onBlur={(e) => {
-        e.target.style.position = 'absolute';
-        e.target.style.clip = 'rect(0 0 0 0)';
-        e.target.style.height = '1px';
-        e.target.style.width = '1px';
-        e.target.style.overflow = 'hidden';
-      }}
-    >
-      {children}
-    </a>
-  );
-};
-
 // ============================================================================
 // SEMANTIC HTML HELPERS
 // ============================================================================
@@ -385,35 +346,6 @@ export const isScreenReaderActive = (): boolean => {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   return !!(hasSrIndicator || hasSrMeta || prefersReducedMotion);
-};
-
-/**
- * Create screen reader only text
- * @param text - Text to show to screen readers
- * @returns Span with screen reader only styling
- */
-export const ScreenReaderOnly: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
-}) => {
-  return (
-    <span
-      className={`sr-only ${className}`}
-      style={{
-        position: 'absolute',
-        width: '1px',
-        height: '1px',
-        padding: '0',
-        margin: '-1px',
-        overflow: 'hidden',
-        clip: 'rect(0, 0, 0, 0)',
-        whiteSpace: 'nowrap',
-        border: '0',
-      }}
-    >
-      {children}
-    </span>
-  );
 };
 
 // ============================================================================
