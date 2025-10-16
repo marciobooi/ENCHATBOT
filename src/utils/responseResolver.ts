@@ -573,12 +573,28 @@ Could you provide more details about what you'd like to know about Eurostat ener
  * Smalltalk handler
  */
 function handleSmalltalk(): ResolverResponse {
-  const responses = [
-    "I'm doing well, thank you for asking! I'm here and ready to help with Eurostat energy data whenever you need.",
-    "I'm functioning optimally! How can I assist you with energy statistics today?",
-    "All systems are go! What energy data questions do you have for me?",
-    "I'm ready and waiting! Let's explore some Eurostat energy datasets together."
-  ];
+const responses = [
+  "I'm feeling energized and ready to dive into Eurostat data! What can I help you with?",
+  "All good here! Curious about energy trends today?",
+  "Fully operational and excited to assist! What’s your next question?",
+  "I’m running smoothly—like a well-oiled machine! Need any stats?",
+  "Charged up and ready! Shall we explore some renewable energy figures?",
+  "Everything is working perfectly! What dataset are you interested in?",
+  "I’m doing great! Want to check out electricity consumption trends?",
+  "Systems are stable and ready for action! What energy topic intrigues you?",
+  "Feeling bright and sunny—just like solar power! How can I help?",
+  "I’m in top shape! Ready to crunch some numbers whenever you are.",
+  "All systems green! What Eurostat energy insight can I provide today?",
+  "I’m good, thanks for asking! Looking for oil, gas, or renewables data?",
+  "Running at full capacity! What’s your next energy question?",
+  "I’m feeling efficient—like a smart grid! What can I assist with?",
+  "Everything’s smooth sailing! Shall we explore energy balances?",
+  "I’m great! Want to dive into energy production stats?",
+  "Fully charged and ready! Curious about energy imports and exports?",
+  "I’m doing fantastic! How about checking some CO₂ emission data?",
+  "All set and ready to help! What energy indicator interests you?",
+  "I’m feeling powerful—like a hydro plant! What can I do for you today?"
+];
 
   const responseIndex = getRandomIndexExcludingLast(lastSmalltalkIndex, responses.length);
   lastSmalltalkIndex = responseIndex;
