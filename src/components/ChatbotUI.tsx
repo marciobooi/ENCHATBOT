@@ -211,8 +211,7 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
           ))}
           {loading && (
             <div className="message bot" aria-live="assertive">
-              <div className="message-bubble loading" aria-label="Bot is thinking">
-                Thinking...
+              <div className="message-bubble loading" aria-label="AI is thinking and processing your message">
               </div>
             </div>
           )}

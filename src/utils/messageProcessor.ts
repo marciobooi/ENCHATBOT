@@ -61,6 +61,13 @@ export async function processAndRespond(input: string): Promise<ResolverResponse
 
   console.log('Message processing result:', processingResult, insightEntry);
 
+  // Simulate AI thinking time (1.5-3 seconds)
+  const thinkingDelay = 150000 + Math.random() * 1500;
+  await new Promise(resolve => setTimeout(resolve, thinkingDelay));
+
   // Generate the response
   return await resolveResponse(processingResult.resolution, processingResult.entities);
 }
+
+
+
