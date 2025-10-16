@@ -17,6 +17,26 @@ export interface ResolverResponse {
   };
 }
 
+// Track last used response indices to avoid consecutive repeats
+let lastGreetingIndex = -1;
+let lastFarewellIndex = -1;
+let lastThanksIndex = -1;
+let lastSmalltalkIndex = -1;
+
+/**
+ * Utility function to get random index avoiding consecutive repeats
+ */
+function getRandomIndexExcludingLast(lastIndex: number, arrayLength: number): number {
+  if (arrayLength <= 1) return 0;
+
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * arrayLength);
+  } while (newIndex === lastIndex);
+
+  return newIndex;
+}
+
 /**
  * Main response resolver that routes based on intent
  */
@@ -90,15 +110,24 @@ export async function resolveResponse(resolution: Resolution, entities: Entities
  * Greeting responses
  */
 function handleGreeting(resolution: Resolution): ResolverResponse {
-  const responses = [
-    "1 Hello! I'm here to help you with Eurostat energy data. What would you like to know?",
-    "2 Hi there! I can assist you with energy statistics and data from Eurostat. How can I help?",
-    "3 Welcome! I'm your Eurostat energy data assistant. What information are you looking for?",
-    "4 Greetings! I have access to comprehensive Eurostat energy datasets. What can I help you discover?"
-  ];
+const responses = [
+  "Hello! I'm here to help you with Eurostat energy data. What would you like to know?",
+  "Hi there! I can assist you with energy statistics and data from Eurostat. How can I help?",
+  "Welcome! I'm your Eurostat energy data assistant. What information are you looking for?",
+  "Greetings! I have access to comprehensive Eurostat energy datasets. What can I help you discover?",
+  "Hey! Need insights on Eurostat energy trends? Just ask!",
+  "Hi! I can provide details on energy production, consumption, and more. What do you need?",
+  "Hello! Curious about renewable energy or fossil fuel stats? I’ve got the data!",
+  "Hi there! Want to explore Eurostat energy indicators? Let me know your topic.",
+  "Welcome! I can help you analyze energy balances and trends. What’s your question?",
+  "Greetings! Looking for electricity, gas, or oil data? I’m ready to assist."
+];
+
+  const responseIndex = getRandomIndexExcludingLast(lastGreetingIndex, responses.length);
+  lastGreetingIndex = responseIndex;
 
   return {
-    text: responses[Math.floor(Math.random() * responses.length)],
+    text: responses[responseIndex],
     type: 'text',
     metadata: {
       source: 'greeting_handler',
@@ -111,15 +140,26 @@ function handleGreeting(resolution: Resolution): ResolverResponse {
  * Farewell responses
  */
 function handleFarewell(): ResolverResponse {
-  const responses = [
-    "Goodbye! Feel free to come back anytime for Eurostat energy data.",
-    "Take care! I'm here whenever you need energy statistics information.",
-    "Farewell! Don't hesitate to return for more Eurostat data insights.",
-    "Until next time! Your Eurostat energy assistant is always available."
-  ];
+
+const responses = [
+  "Goodbye! Feel free to come back anytime for Eurostat energy data.",
+  "Take care! I'm here whenever you need energy statistics information.",
+  "Farewell! Don't hesitate to return for more Eurostat data insights.",
+  "Until next time! Your Eurostat energy assistant is always available.",
+  "See you soon! Energy data will be waiting whenever you need it.",
+  "Bye for now! Come back anytime for Eurostat energy trends and stats.",
+  "Thanks for stopping by! I’ll be here for your next energy query.",
+  "Catch you later! Eurostat energy insights are just a click away.",
+  "Goodbye! Stay informed and return for more energy data anytime.",
+  "Take care! I’ll be ready with Eurostat energy details when you return."
+];
+
+
+  const responseIndex = getRandomIndexExcludingLast(lastFarewellIndex, responses.length);
+  lastFarewellIndex = responseIndex;
 
   return {
-    text: responses[Math.floor(Math.random() * responses.length)],
+    text: responses[responseIndex],
     type: 'text',
     metadata: {
       source: 'farewell_handler'
@@ -131,15 +171,24 @@ function handleFarewell(): ResolverResponse {
  * Thanks responses
  */
 function handleThanks(): ResolverResponse {
-  const responses = [
-    "You're welcome! Happy to help with Eurostat energy data.",
-    "My pleasure! Let me know if you need more energy statistics.",
-    "Glad I could help! Eurostat has extensive energy datasets available.",
-    "You're welcome! Feel free to ask about any energy-related data."
-  ];
+const responses = [
+  "You're welcome! Happy to help with Eurostat energy data.",
+  "My pleasure! Let me know if you need more energy statistics.",
+  "Glad I could help! Eurostat has extensive energy datasets available.",
+  "You're welcome! Feel free to ask about any energy-related data.",
+  "No problem! Always here for your Eurostat energy questions.",
+  "Anytime! If you need more insights, just let me know.",
+  "You're welcome! Energy data is my specialty.",
+  "Happy to assist! Come back anytime for more Eurostat stats.",
+  "Glad to help! Want to explore more energy indicators?",
+  "You're welcome! I’m ready for your next energy query."
+];
+
+  const responseIndex = getRandomIndexExcludingLast(lastThanksIndex, responses.length);
+  lastThanksIndex = responseIndex;
 
   return {
-    text: responses[Math.floor(Math.random() * responses.length)],
+    text: responses[responseIndex],
     type: 'text',
     metadata: {
       source: 'thanks_handler'
@@ -531,8 +580,11 @@ function handleSmalltalk(): ResolverResponse {
     "I'm ready and waiting! Let's explore some Eurostat energy datasets together."
   ];
 
+  const responseIndex = getRandomIndexExcludingLast(lastSmalltalkIndex, responses.length);
+  lastSmalltalkIndex = responseIndex;
+
   return {
-    text: responses[Math.floor(Math.random() * responses.length)],
+    text: responses[responseIndex],
     type: 'text',
     metadata: {
       source: 'smalltalk_handler'
