@@ -91,10 +91,10 @@ export async function resolveResponse(resolution: Resolution, entities: Entities
  */
 function handleGreeting(resolution: Resolution): ResolverResponse {
   const responses = [
-    "Hello! I'm here to help you with Eurostat energy data. What would you like to know?",
-    "Hi there! I can assist you with energy statistics and data from Eurostat. How can I help?",
-    "Welcome! I'm your Eurostat energy data assistant. What information are you looking for?",
-    "Greetings! I have access to comprehensive Eurostat energy datasets. What can I help you discover?"
+    "1 Hello! I'm here to help you with Eurostat energy data. What would you like to know?",
+    "2 Hi there! I can assist you with energy statistics and data from Eurostat. How can I help?",
+    "3 Welcome! I'm your Eurostat energy data assistant. What information are you looking for?",
+    "4 Greetings! I have access to comprehensive Eurostat energy datasets. What can I help you discover?"
   ];
 
   return {
