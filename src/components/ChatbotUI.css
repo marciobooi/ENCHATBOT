@@ -251,7 +251,7 @@
 
 .message-bubble.loading::after {
   content: '';
-  width: 60px;
+  width: 35px;
   aspect-ratio: 2;
   --_g: no-repeat radial-gradient(circle closest-side, var(--accent-color) 90%, #0000);
   background: 
@@ -259,10 +259,10 @@
     var(--_g) 50%  50%,
     var(--_g) 100% 50%;
   background-size: calc(100%/3) 50%;
-  animation: l3 1s infinite linear;
+  animation: dots 1s infinite linear;
 }
 
-@keyframes l3 {
+@keyframes dots {
   20%{background-position:0%   0%, 50%  50%,100%  50%}
   40%{background-position:0% 100%, 50%   0%,100%  50%}
   60%{background-position:0%  50%, 50% 100%,100%   0%}
@@ -456,7 +456,6 @@
 
   .message-bubble {
     max-width: 90%;
-    padding: 8px 12px;
     font-size: 0.95rem;
   }
 
