@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperat
 import { resolveIntents } from '../utils/intentDetection';
 import { preprocessInput } from '../utils/preprocess';
 import { extractEntities } from '../utils/entityExtractor';
+import { resolveResponse } from '../utils/responseResolver';
 import chatInsightsStore from '../state/globalChatState';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useAriaLive } from '../utils/accessibility';
@@ -104,10 +105,13 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
     setLoading(true);
 
     try {
+       //process the input 
       const preprocessed = preprocessInput(input);
+        //check the intent type   
       const resolution = resolveIntents(preprocessed.cleaned);
+        //extract the entities from the input   
       const entities = extractEntities(preprocessed.cleaned);
-
+        // save the data in a global object
       const insightEntry = chatInsightsStore.record({
         raw: input,
         cleaned: preprocessed.cleaned,
@@ -120,10 +124,11 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
       });
       console.log('Entity extraction result:', entities, insightEntry);
 
-      const botResponse = 'ackonadge';
+      // Get the appropriate response based on intent and entities
+      const responseResult = await resolveResponse(resolution, entities);
 
       const botMessage: Message = {
-        text: botResponse,
+        text: responseResult.text,
         sender: 'bot',
         timestamp: new Date(),
       };
