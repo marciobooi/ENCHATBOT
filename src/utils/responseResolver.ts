@@ -22,6 +22,7 @@ let lastGreetingIndex = -1;
 let lastFarewellIndex = -1;
 let lastThanksIndex = -1;
 let lastSmalltalkIndex = -1;
+let lastStatementIndex = -1;
 
 /**
  * Utility function to get random index avoiding consecutive repeats
@@ -661,15 +662,192 @@ If these solutions don't resolve your issue, please provide more details about w
  * Statement handler
  */
 function handleStatement(): ResolverResponse {
+const responses = [
+  `I understand your statement. Here’s how I can assist:
+
+• **Query data**: Ask about energy production, consumption, or trade
+• **Compare metrics**: Analyze differences across countries or years
+• **Explore metadata**: Learn about dataset coverage and methodology
+• **Download data**: Get files for your own analysis
+
+What specific energy topic would you like to dive into?`,
+
+  `Got it! I can help you with Eurostat energy data in several ways:
+
+• **Answer questions** on energy trends and indicators
+• **Perform comparisons** between regions or time periods
+• **Provide dataset details** including sources and frequency
+• **Export data** for your projects
+
+What would you like to explore first?`,
+
+  `I hear you. Here’s what I can do:
+
+• **Retrieve energy statistics** from Eurostat databases
+• **Compare data points** across multiple dimensions
+• **Explain metadata** for better understanding
+• **Offer download options** for further analysis
+
+Which area interests you most?`,
+
+  `Thanks for sharing that. I can assist with:
+
+• **Energy queries** for production, consumption, and prices
+• **Cross-country comparisons** and trend analysis
+• **Dataset documentation** for methodology and coverage
+• **Data exports** in various formats
+
+What should we look at together?`,
+
+  `Understood! Here’s how I can help:
+
+• **Answer energy-related questions**
+• **Compare indicators** across countries or years
+• **Provide metadata** for datasets
+• **Facilitate downloads** for your analysis
+
+What’s your next step?`,
+
+  `Acknowledged. I can support you with:
+
+• **Detailed queries** on energy statistics
+• **Comparative analysis** across regions or time frames
+• **Metadata exploration** for dataset clarity
+• **Data delivery** in multiple formats
+
+What energy data would you like to work with?`,
+
+  `I see your point. Here’s what I offer:
+
+• **Energy data retrieval** from Eurostat
+• **Comparisons** between countries or sectors
+• **Technical details** about data collection
+• **Download options** for raw or processed data
+
+What should we start with?`,
+
+  `Noted! I can assist you by:
+
+• **Answering questions** about energy trends
+• **Performing comparisons** across different dimensions
+• **Providing metadata** for better understanding
+• **Helping with downloads** for your analysis
+
+What’s your focus today?`,
+
+  `I appreciate your input. Here’s how I can help:
+
+• **Retrieve energy data** from Eurostat
+• **Analyze trends** and perform comparisons
+• **Explain dataset structure** and methodology
+• **Provide export options** for your workflow
+
+What would you like to explore?`,
+
+  `Got it! I’m ready to assist with:
+
+• **Energy statistics queries**
+• **Comparative studies** across regions or time periods
+• **Metadata details** for clarity
+• **Data downloads** in various formats
+
+What’s your next question?`,
+
+  `Understood. Here’s what I can do for you:
+
+• **Query specific energy data**
+• **Compare metrics** between countries or years
+• **Access metadata** for datasets
+• **Export data** for your analysis
+
+What energy topic interests you?`,
+
+  `I hear you. My capabilities include:
+
+• **Energy data retrieval**
+• **Cross-country comparisons**
+• **Metadata exploration**
+• **Data export options**
+
+What should we focus on?`,
+
+  `Acknowledged. I can help with:
+
+• **Energy queries** for production and consumption
+• **Comparative analysis** across multiple dimensions
+• **Dataset documentation** for clarity
+• **Flexible downloads** for your needs
+What’s your next step?`,
+
+  `I understand your perspective. Here’s how I can assist:
+
+• **Answer questions** about energy indicators
+• **Perform comparisons** across regions or time frames
+• **Provide metadata** for datasets
+• **Facilitate data downloads**
+
+What would you like to explore today?`,
+
+  `Thanks for sharing that. I can support you with:
+
+• **Energy data queries**
+• **Comparative studies** across countries or years
+• **Dataset details** including methodology
+• **Data exports** for your analysis
+What’s your focus?`,
+
+  `Noted! Here’s what I can offer:
+
+• **Retrieve Eurostat energy statistics**
+• **Analyze trends and comparisons**
+• **Explain metadata and coverage**
+• **Provide download options**
+
+What should we look at first?`,
+
+  `I see what you mean. I can help with:
+
+• **Energy queries** for production, consumption, and trade
+• **Comparative analysis** across different dimensions
+• **Metadata details** for datasets
+• **Data delivery** in multiple formats
+
+What’s your next question?`,
+
+  `Understood. Here’s how I can assist:
+
+• **Query energy data** from Eurostat
+• **Compare indicators** across countries or sectors
+• **Access metadata** for clarity
+• **Export data** for your projects
+
+What energy topic interests you most?`,
+
+  `Acknowledged. I’m ready to help with:
+
+• **Energy statistics retrieval**
+• **Comparative studies** across time periods
+• **Dataset documentation** for better understanding
+• **Data downloads** for your analysis
+
+What should we start with?`,
+
+  `I appreciate your statement. Here’s what I can do:
+
+• **Answer questions** about energy trends
+• **Perform comparisons** across multiple dimensions
+• **Provide metadata** for datasets
+• **Facilitate downloads** for your workflow
+
+What’s your next step?`
+];
+
+
+  const responseIndex = getRandomIndexExcludingLast(lastStatementIndex, responses.length);
+  lastStatementIndex = responseIndex;
+
   return {
-    text: `I understand your statement. If you'd like to:
-
-• **Query data**: Ask specific questions about energy statistics
-• **Get information**: Learn about available datasets or methodologies
-• **Apply filters**: Set time periods, countries, or energy types
-• **Compare data**: Analyze differences between regions or time periods
-
-Please let me know what specific energy data information you're interested in, and I'll help you find it.`,
+    text: responses[responseIndex],
     type: 'text',
     metadata: {
       source: 'statement_handler'
