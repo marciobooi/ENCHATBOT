@@ -8,6 +8,7 @@ import './ChatbotUI.css';
 import Message from './Message';
 import Button from './Button';
 import HelpPanel from './HelpPanel';
+import Tooltip from './Tooltip';
 
 interface Message {
   text: string;
@@ -58,6 +59,13 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  // Auto-focus input on mount
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   // Message history navigation
   const navigateHistory = useCallback((direction: 'up' | 'down') => {
@@ -195,43 +203,43 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
           AI-powered chatbot for Eurostat energy data queries. Use keyboard shortcuts or type questions about energy statistics.
         </div>
         <div className="header-buttons">
-          <button
-            className="menu-button"
-            onClick={() => setShowHelp(!showHelp)}
-            aria-label={showHelp ? "Hide help menu" : "Show help menu"}
-            aria-expanded={showHelp}
-            aria-controls="help-panel"
-            type="button"
-          >
-            ?
-          </button>
-          <button
-            className="clear-button"
-            onClick={clearChat}
-            aria-label="Clear chat history"
-            type="button"
-          >
-            <Trash2 size={16} />
-          </button>
-
-
-
-
-
-          
-          {onClose && (
+          <Tooltip content="Help & Keyboard Shortcuts" side="bottom">
             <button
-              className="close-button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              aria-label="Close chatbot"
+              className="menu-button"
+              onClick={() => setShowHelp(!showHelp)}
+              aria-label={showHelp ? "Hide help menu" : "Show help menu"}
+              aria-expanded={showHelp}
+              aria-controls="help-panel"
               type="button"
             >
-              ×
+              ?
             </button>
+          </Tooltip>
+          <Tooltip content="Clear Chat History" side="bottom">
+            <button
+              className="clear-button"
+              onClick={clearChat}
+              aria-label="Clear chat history"
+              type="button"
+            >
+              <Trash2 size={16} />
+            </button>
+          </Tooltip>
+          {onClose && (
+            <Tooltip content="Close Chatbot" side="bottom">
+              <button
+                className="close-button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                }}
+                aria-label="Close chatbot"
+                type="button"
+              >
+                ×
+              </button>
+            </Tooltip>
           )}
         </div>
       </div>

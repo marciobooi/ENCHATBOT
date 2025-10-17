@@ -3,7 +3,6 @@
 .help-panel-container {
   flex: 1;
   overflow-y: auto;
-  padding: 32px;
   background: var(--secondary-bg);
   background-image:
     radial-gradient(circle at 20% 80%, rgba(79, 157, 216, 0.03) 0%, transparent 50%),
