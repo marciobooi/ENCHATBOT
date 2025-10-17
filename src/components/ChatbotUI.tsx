@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperat
 import { processAndRespond } from '../utils/messageProcessor';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useAriaLive } from '../utils/accessibility';
+import { Trash2 } from 'lucide-react';
+import chatInsightsStore from '../state/globalChatState';
 import './ChatbotUI.css';
 import Message from './Message';
 import Button from './Button';
@@ -27,6 +29,7 @@ interface ChatbotUIProps {
 export interface ChatbotUIHandlers {
   handleSend: () => void;
   clearInput: () => void;
+  clearChat: () => void;
   navigateHistory: (direction: 'up' | 'down') => void;
   focusInput: () => void;
 }
@@ -82,6 +85,23 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
     setInput('');
     setHistoryIndex(-1);
   }, []);
+
+  // Clear chat
+  const clearChat = useCallback(() => {
+    setMessages([
+      {
+        text: 'Hello! I\'m here to help with Eurostat energy data. What can I do for you?',
+        sender: 'bot',
+        timestamp: new Date(),
+      },
+    ]);
+    setMessageHistory([]);
+    setHistoryIndex(-1);
+    setInput('');
+    // Clear chat insights store
+    chatInsightsStore.clear();
+    announceStatus('Chat cleared. Starting fresh conversation.');
+  }, [announceStatus]);
 
   // Focus input
   const focusInput = useCallback(() => {
@@ -148,9 +168,10 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
   useImperativeHandle(ref, () => ({
     handleSend,
     clearInput,
+    clearChat,
     navigateHistory,
     focusInput,
-  }), [handleSend, clearInput, navigateHistory, focusInput]);
+  }), [handleSend, clearInput, clearChat, navigateHistory, focusInput]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -184,6 +205,20 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
           >
             ?
           </button>
+          <button
+            className="clear-button"
+            onClick={clearChat}
+            aria-label="Clear chat history"
+            type="button"
+          >
+            <Trash2 size={16} />
+          </button>
+
+
+
+
+
+          
           {onClose && (
             <button
               className="close-button"

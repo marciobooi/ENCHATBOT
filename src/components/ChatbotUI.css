@@ -83,7 +83,40 @@
   display: flex;
   gap: 8px;
   align-items: center;
-      margin: 1rem;
+}
+
+.clear-button {
+    padding: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: var(--eurostat-white);
+    width: 40px;
+    height: 40px;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+}
+
+.clear-button svg {
+  color: var(--eurostat-white) !important;
+  stroke: var(--eurostat-white) !important;
+  width: 16px;
+  height: 16px;
+}
+
+.clear-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.clear-button:focus {
+  outline: 2px solid var(--eurostat-light-blue);
+  outline-offset: 2px;
 }
 
 .close-button {
@@ -293,7 +326,7 @@ padding: unset;
 
 
 .input-container {
-  padding: 24px 32px;
+  padding: 12px 17px;
   background: var(--eurostat-white);
   border-top: 1px solid var(--border-color);
   display: flex;
