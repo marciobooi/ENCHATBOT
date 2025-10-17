@@ -80,8 +80,8 @@ export async function runGreetingTests(): Promise<void> {
     const input = greetingTestSentences[i];
 
     try {
-      // Process the message
-      const processingResult = processMessage(input);
+      // Process the message (simulating first message in conversation)
+      const processingResult = processMessage(input, true);
 
       // Check if greeting intent was detected
       const isGreeting = processingResult.resolution.primary === 'greeting';

@@ -37,12 +37,12 @@ export interface ProcessingResult {
 /**
  * Process a user message through all analysis stages
  */
-export function processMessage(input: string): ProcessingResult {
+export function processMessage(input: string, isFirstMessage = false): ProcessingResult {
   // Step 1: Preprocess the input
   const preprocessed = preprocessInput(input);
 
-  // Step 2: Detect intent
-  const resolution = resolveIntents(preprocessed.cleaned);
+  // Step 2: Detect intent (with conversation context)
+  const resolution = resolveIntents(preprocessed.cleaned, isFirstMessage);
 
   // Step 3: Extract entities
   const entities = extractEntities(preprocessed.cleaned);
@@ -62,8 +62,19 @@ export async function processAndRespond(
   currentMessages: Message[],
   currentMessageHistory: string[]
 ): Promise<ResolverResponse> {
-  // Process the message
-  const processingResult = processMessage(input);
+  // Determine if this is the first user message in the conversation
+  const userMessages = currentMessages.filter(msg => msg.sender === 'user');
+  const isFirstMessage = userMessages.length === 0;
+  
+  console.log('🔍 Conversation state:', {
+    totalMessages: currentMessages.length,
+    userMessageCount: userMessages.length,
+    isFirstMessage,
+    input
+  });
+
+  // Process the message (with conversation context)
+  const processingResult = processMessage(input, isFirstMessage);
 
   // Store the processed data in global state for debugging/logging
 const insightEntry = chatInsightsStore.record({

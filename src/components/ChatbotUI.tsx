@@ -162,7 +162,8 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
 
     try {
       // Process the message and generate response (complete pipeline)
-      const responseResult = await processAndRespond(currentInput, finalMessages, finalMessageHistory);
+      // Pass messages BEFORE adding user message to correctly detect first message
+      const responseResult = await processAndRespond(currentInput, messages, finalMessageHistory);
 
       const botMessage: Message = {
         text: responseResult.text,

@@ -18,7 +18,8 @@ export const INTENTS = [
   'compare_request',
   'command',
   'question',
-  'smalltalk',          // NEW
+  'smalltalk',
+  'ambiguous',          // NEW: context-dependent phrases
   'statement',
   'invalid',
 ] as const;
@@ -170,6 +171,7 @@ const GREETING_BASE = [
   // --- Time-based greetings (commonly used as greetings) ---
   'good morning', 'good afternoon', 'good day',
   'morning', 'afternoon', 'evening',
+  // Note: "good evening" is ambiguous (context-dependent), but "evening" alone is a greeting
 
   // --- Friendly variants ---
   'hi there', 'hello there', 'hey there',
@@ -207,8 +209,8 @@ const FAREWELL_BASE = [
   'brb', 'bbl', 'bb', 'bai', 'buh-bye', 'buhbye',
   
   // --- Time-based farewells ---
-  'good night', 'good evening', 'goodnight',
-  'night', 'nite', 'gn',
+  'good night', 'goodnight', 'gn',
+  // Note: "good evening", "night", "nite" moved to ambiguous intent for context-based detection
   
   // --- Friendly variants ---
   'bye bye', 'bye-bye', 'byebye',
@@ -231,6 +233,73 @@ const FAREWELL_BASE = [
   'good luck', 'best wishes', 'all the best', 'take it easy',
   'stay safe', 'be well', 'be safe',
 ];
+
+// Context-dependent phrases that can be either greeting or farewell
+const AMBIGUOUS_BASE = [
+  'good evening',
+  // Note: "evening" removed - behaves like "morning"/"afternoon" (always greeting when standalone)
+  'night',
+  'nite',
+];
+
+// Group address words that indicate greeting context
+const GROUP_ADDRESS_WORDS = ['everyone', 'folks', 'all', 'team', 'guys', 'yall', "y'all"];
+
+// Farewell indicator words
+const FAREWELL_INDICATORS = ['goodbye', 'bye', 'see you', 'see ya', 'take care', 'later', 'leaving', 'going'];
+
+/**
+ * Resolves ambiguous phrase to 'greeting' or 'farewell' based on context
+ * @param phrase - The ambiguous phrase (e.g., "good evening", "night")
+ * @param text - Full text being analyzed
+ * @param isFirstMessage - Whether this is the first message in conversation
+ * @returns 'greeting' or 'farewell'
+ */
+function resolveAmbiguous(phrase: string, text: string, isFirstMessage: boolean): 'greeting' | 'farewell' {
+  const trimmed = text.trim();
+  const lowerText = trimmed.toLowerCase();
+  const lowerPhrase = phrase.toLowerCase();
+  
+  // Build regex for the phrase with flexible whitespace
+  const phraseWords = lowerPhrase.split(/\s+/);
+  const phrasePattern = phraseWords.join('\\s+');
+  
+  // Check for group address words (indicates greeting)
+  const groupPattern = new RegExp(`\\b${phrasePattern}\\s+(?:${GROUP_ADDRESS_WORDS.join('|')})\\b`, 'iu');
+  if (groupPattern.test(lowerText)) {
+    return 'greeting';
+  }
+  
+  // Check for farewell indicators (indicates farewell)
+  const farewellPattern = new RegExp(`\\b${phrasePattern}[,]?\\s+(?:and\\s+)?(?:${FAREWELL_INDICATORS.join('|')})`, 'iu');
+  if (farewellPattern.test(lowerText)) {
+    return 'farewell';
+  }
+  
+  // Check position
+  const startsWithPhrase = new RegExp(`^${phrasePattern}$`, 'iu').test(lowerText);
+  const startsWithPhraseAndMore = new RegExp(`^${phrasePattern}\\b`, 'iu').test(lowerText);
+  const endsWithPhrase = new RegExp(`\\b${phrasePattern}$`, 'iu').test(lowerText);
+  
+  if (startsWithPhrase) {
+    // Standalone phrase: first message → greeting, otherwise → farewell
+    return isFirstMessage ? 'greeting' : 'farewell';
+  }
+  
+  if (startsWithPhraseAndMore && !startsWithPhrase) {
+    // At start with more text: first message → greeting, otherwise check defaults
+    // "good evening" at start is usually greeting
+    return isFirstMessage ? 'greeting' : 'greeting';
+  }
+  
+  if (endsWithPhrase) {
+    // At end → usually farewell
+    return 'farewell';
+  }
+  
+  // Middle position or no specific pattern: default to farewell (more common for time-based phrases)
+  return 'farewell';
+}
 
 const COUNTRY_NAMES = [
   'eu','eu27','euro area','european union','belgium','france','germany','netherlands','luxembourg','spain','portugal',
@@ -372,10 +441,6 @@ greeting: [
     ], 1, 2) ? 1.3 : 0),
     weight: 1
   },
-
-  // 11) Optional: treat "good night / gn" as greeting (often farewell—keep low)
-  { pattern: /\bgood\s+night\b/iu, weight: 0.8 },
-  { pattern: /\bgn\b/iu, weight: 0.7 },
 ],
 
 
@@ -431,6 +496,11 @@ question: [
     { pattern: /\b(nice to (meet|see) you|pleased to meet you)\b/u, weight: 2.2 },
     { pattern: /\b(how do you do)\b/u, weight: 2.0 }, // keep this as it's more formal smalltalk
   ],
+
+  ambiguous: [
+    // Context-dependent phrases resolved by resolveAmbiguous() function
+    { pattern: makeGreetingRegex(AMBIGUOUS_BASE), weight: 2.5 }
+  ],
 } as const;
 
 /* ===================== Precedence & policy ===================== */
@@ -466,7 +536,7 @@ const COINTENT_FRACTION = 0.6;  // co-intents >= 60% of the top score
 
 /* ===================== Scoring ===================== */
 
-export function score(text: string): Scores {
+export function score(text: string, isFirstMessage = false): Scores {
 
 let t = normalize(text);
   const scores = Object.fromEntries(INTENTS.map(i => [i, 0])) as Scores;
@@ -528,6 +598,28 @@ if (!t || typeof t !== 'string' || !t.trim()) {
     scores.question -= 2.5; // farewell should beat question
   }
 
+  // ========== AMBIGUOUS INTENT RESOLUTION ==========
+  // Resolve ambiguous phrases to either greeting or farewell based on context
+  if (scores.ambiguous > 0) {
+    // Check which ambiguous phrase was detected
+    for (const phrase of AMBIGUOUS_BASE) {
+      const phraseWords = phrase.split(/\s+/);
+      const phrasePattern = new RegExp(`\\b${phraseWords.join('\\s+')}\\b`, 'iu');
+      
+      if (phrasePattern.test(t)) {
+        const resolved = resolveAmbiguous(phrase, t, isFirstMessage);
+        
+        if (resolved === 'greeting') {
+          scores.greeting += scores.ambiguous;
+        } else {
+          scores.farewell += scores.ambiguous;
+        }
+        scores.ambiguous = 0;
+        break;
+      }
+    }
+  }
+
   // If nothing fired, treat as a generic statement
   if (Object.values(scores).every(v => v === 0)) scores.statement = 0.6;
 
@@ -536,8 +628,8 @@ if (!t || typeof t !== 'string' || !t.trim()) {
 
 /* ===================== Resolver (multi-intent → primary) ===================== */
 
-export function resolveIntents(text: string): Resolution {
-  const s = score(text);
+export function resolveIntents(text: string, isFirstMessage = false): Resolution {
+  const s = score(text, isFirstMessage);
 
   const active = Object.entries(s)
     .filter(([, v]) => v > 0)
@@ -641,6 +733,6 @@ export function resolveIntents(text: string): Resolution {
 }
 
 /** Public API: single intent label */
-export function detectIntent(text: string): Intent {
-  return resolveIntents(text).primary;
+export function detectIntent(text: string, isFirstMessage = false): Intent {
+  return resolveIntents(text, isFirstMessage).primary;
 }
