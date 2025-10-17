@@ -173,30 +173,32 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
         <div id="chatbot-description" className="sr-only">
           AI-powered chatbot for Eurostat energy data queries. Use keyboard shortcuts or type questions about energy statistics.
         </div>
-        <button
-          className="menu-button"
-          onClick={() => setShowHelp(!showHelp)}
-          aria-label={showHelp ? "Hide help menu" : "Show help menu"}
-          aria-expanded={showHelp}
-          aria-controls="help-panel"
-          type="button"
-        >
-          ?
-        </button>
-        {onClose && (
+        <div className="header-buttons">
           <button
-            className="close-button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onClose();
-            }}
-            aria-label="Close chatbot"
+            className="menu-button"
+            onClick={() => setShowHelp(!showHelp)}
+            aria-label={showHelp ? "Hide help menu" : "Show help menu"}
+            aria-expanded={showHelp}
+            aria-controls="help-panel"
             type="button"
           >
-            ×
+            ?
           </button>
-        )}
+          {onClose && (
+            <button
+              className="close-button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              aria-label="Close chatbot"
+              type="button"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       {showHelp ? (

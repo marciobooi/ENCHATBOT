@@ -54,14 +54,17 @@
 }
 
 .chatbot-header {
-  padding: 24px 32px;
+  padding: 1px 13px;
   background: linear-gradient(135deg, var(--eurostat-blue) 0%, var(--eurostat-dark-blue) 100%);
   color: var(--eurostat-white);
   border-bottom: none;
   position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.chatbot-header::before {
+/* .chatbot-header::before {
   content: '';
   position: absolute;
   top: 0;
@@ -70,42 +73,37 @@
   bottom: 0;
   background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
   opacity: 0.3;
+} */
+
+.chatbot-header h1 {
+    margin: 1rem;
 }
 
-.chatbot-header h2 {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 600;
-  position: relative;
-  z-index: 1;
-  letter-spacing: -0.025em;
-}
 
-.chatbot-header h2::before {
-  content: '🇪🇺';
-  margin-right: 12px;
-  font-size: 1.5rem;
+.header-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .close-button {
-  position: absolute;
-  top: 16px;
-  right: 24px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: var(--eurostat-white);
-  font-size: 24px;
-  font-weight: bold;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-  z-index: 10;
+    padding: unset;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: var(--eurostat-white);
+    font-size: 24px;
+    font-weight: bold;
+    width: 32px;
+    height: 32px;
+    border-radius: 50% !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    padding: 1.2rem;
 }
 
 .close-button:hover {
@@ -119,9 +117,7 @@
 }
 
 .menu-button {
-  position: absolute;
-  top: 16px;
-  left: 24px;
+padding: unset;
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: var(--eurostat-white);
@@ -129,7 +125,7 @@
   font-weight: bold;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 50% !important;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -137,6 +133,7 @@
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
   z-index: 10;
+  padding: 1.2rem ;
 }
 
 .menu-button:hover {
