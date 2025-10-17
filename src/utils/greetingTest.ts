@@ -6,33 +6,68 @@
 import { processMessage } from './messageProcessor';
 
 const greetingTestSentences = [
-  "hello",
-  "hi there",
+  // === FORMAL GREETINGS ===
   "good morning",
-  "hey",
-  "hi",
-  "greetings",
-  "good afternoon",
-  "hello there",
-  "hey there",
+  "good afternoon", 
+  "good evening",
   "good day",
+  "greetings",
   "salutations",
+  "hello",
+  "hello there",
+  
+  // === INFORMAL GREETINGS ===
+  "hi",
+  "hi there",
+  "hey",
+  "hey there",
+  "hiya",
   "howdy",
   "yo",
   "sup",
-  "hiya",
-  "hallo",
-  // New expanded greetings
-  "hi all",
-  "hey everyone",
-  "how's it going",
-  "what's up",
-  "how are you",
-  "long time no see",
-  "good evening",
-  "hey team",
   "wassup",
-  "how are things"
+  "hallo",
+  
+  // === GROUP GREETINGS ===
+  "hi all",
+  "hello everyone",
+  "hey everyone",
+  "hey team",
+  "hi folks",
+  "hey guys",
+  
+  // === CONVERSATIONAL OPENERS ===
+  "how's it going",
+  "how is it going",
+  "what's up",
+  "what's new",
+  "what's good",
+  "how are you",
+  "how are you doing",
+  "how you doing",
+  "how are things",
+  "how's everything",
+  
+  // === TIME-SPECIFIC ===
+  "morning",
+  "afternoon",
+  "evening",
+  
+  // === CASUAL/SLANG ===
+  "wazzup",
+  "waddup",
+  "heya",
+  "heyo",
+  
+  // === RECONNECTION GREETINGS ===
+  "long time no see",
+  "it's been a while",
+  "nice to see you",
+  
+  // === ABBREVIATED ===
+  "gm",
+  "ga",
+  "g'day"
 ];
 
 export async function runGreetingTests(): Promise<void> {

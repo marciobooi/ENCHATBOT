@@ -97,6 +97,17 @@ function escapeRe(s: string) {
 const wordMatcher = (list: string[], flags = 'u') =>
   new RegExp(`\\b(?:${list.map(escapeRe).join('|')})\\b`, flags);
 
+// Enhanced greeting regex builder that handles multi-word phrases with flexible whitespace
+function makeGreetingRegex(base: string[], flags = 'iu') {
+  const single = base.filter(p => !p.includes(' ')).map(escapeRe);
+  const multi = base
+    .filter(p => p.includes(' '))
+    .map(p => escapeRe(p).replace(/\s+/g, '\\s+')); // allow any whitespace
+
+  // Word-boundaries to avoid "hi" matching "highlight"
+  return new RegExp(`\\b(?:${[...single, ...multi].join('|')})\\b`, flags);
+}
+
 /* ===================== Domain lexicon ===================== */
 
 const ENERGY_TERMS = [
@@ -154,7 +165,7 @@ const GREETING_BASE = [
   'heya', 'heyo',
 
   // --- Abbreviations / internet shorthand ---
-  'gm', 'ga', 'ge', 'gday', "g'day", 'gidday',
+  'gm', 'ga', 'ge', 'gday', "g'day", 'g day', 'gidday',
 
   // --- Time-based greetings (commonly used as greetings) ---
   'good morning', 'good afternoon', 'good evening', 'good day',
@@ -164,21 +175,23 @@ const GREETING_BASE = [
   'hi there', 'hello there', 'hey there',
 
   // --- Group-address variants (very common in chats/teams) ---
-  'hi all', 'hi everyone', 'hi folks', 'hi team',
-  'hello all', 'hello everyone', 'hello folks', 'hello team',
-  'hey all', 'hey everyone', 'hey folks', 'hey team',
+  'hi all', 'hi everyone', 'hi folks', 'hi team', 'hi guys',
+  'hello all', 'hello everyone', 'hello folks', 'hello team', 'hello guys',
+  'hey all', 'hey everyone', 'hey folks', 'hey team', 'hey guys',
   'hey yall', "hey y'all",
 
   // --- Conversational openers typically used as greetings ---
-  "how's it going", 'hows it going', 'how is it going',
+  "how's it going", 'hows it going', 'how is it going', 'how s it going',
   'how are you', 'how are ya', 'how are yall', "how are y'all", 'how are u',
-  'how are things', 'how goes it',
-  'how you doing', 'how ya doing', 'how ya doin', 'how you doin', 'how u doing',
-  "what's up", 'whats up', 'wassup', 'wazzup', 'whassup', 'waddup', 'what up',
-  "what's good", 'whats good', "what's new", 'whats new',
-  "what's happening", 'whats happening', "what's happenin", 'whats happenin',
-  "what's poppin", 'whats poppin',
-  'long time no see',
+  'how are you doing', 'how you doing',
+  'how are things', 'how goes it', "how's everything", 'hows everything', 'how s everything',
+  'how ya doing', 'how ya doin', 'how you doin', 'how u doing',
+  "what's up", 'whats up', 'what s up', 'wassup', 'wazzup', 'whassup', 'waddup', 'what up',
+  "what's good", 'whats good', 'what s good', "what's new", 'whats new', 'what s new',
+  "what's happening", 'whats happening', 'what s happening', "what's happenin", 'whats happenin',
+  "what's poppin", 'whats poppin', 'what s poppin',
+  'long time no see', "it's been a while", 'its been a while', 'it s been a while',
+  'nice to see you',
 
   // --- Optional (often farewells; include only if you want them detected as greetings) ---
   // 'good night', 'night', 'gn',
@@ -206,7 +219,7 @@ const RX: Record<string, RegExp> = {
   metadata: wordMatcher(METADATA_TERMS),
   compare: wordMatcher(COMPARE_TERMS),
   help: wordMatcher(HELP_TERMS),
-  greeting: wordMatcher(GREETING_BASE),
+  greeting: makeGreetingRegex(GREETING_BASE), // Use enhanced regex for multi-word phrases
   thanks: wordMatcher(THANKS_BASE),
   farewell: wordMatcher(FAREWELL_BASE),
   country: wordMatcher(COUNTRY_NAMES),
@@ -287,7 +300,7 @@ const PATTERNS: Record<
 
 greeting: [
   // 1) Your main list match (from GREETING_BASE)
-  { pattern: RX.greeting, weight: 2.6 }, // bumped slightly to reflect expanded coverage
+  { pattern: RX.greeting, weight: 4.0 }, // Significantly increased to ensure greetings beat questions
 
   // 2) Time-based greetings
   { pattern: /\bgood\s+(?:morning|afternoon|evening|day)\b/iu, weight: 1.9 },
@@ -334,7 +347,7 @@ greeting: [
 
 
   farewell: [
-    { pattern: RX.farewell, weight: 2.0 },
+    { pattern: RX.farewell, weight: 4.5 }, // Higher than greeting to ensure farewell wins
     { pattern: /\b(see (ya|you)|take care|good night)\b/u, weight: 1.6 },
   ],
   thanks: [

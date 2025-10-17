@@ -164,7 +164,15 @@ function maskProfanity(text: string, removed: PreprocessResult['removed'], doMas
 const INTERROGATIVES = new Set(['who','what','when','where','why','how','which']);
 
 const SOCIAL_TOKENS = new Set([
-  'hi','hello','hey','bye','goodbye','thanks','thank','cheers','yo','hiya','gm','gn'
+  // Simple greetings and farewells
+  'hi','hello','hey','bye','goodbye','thanks','thank','cheers','yo','hiya','gm','gn',
+  // Conversational greetings - protect from spell correction
+  'sup','wassup','wazzup','waddup','whassup',
+  'howdy','heya','heyo','hallo',
+  // Time-based greetings - protect "day" from being corrected to "may"
+  'morning','afternoon','evening','day','night',
+  // Conversational words - protect "new" from being corrected to "now"
+  'new'
 ]);
 
 const EN_STOPWORDS = new Set<string>([
