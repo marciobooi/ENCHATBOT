@@ -509,3 +509,42 @@
     width: fit-content;
   }
 }
+
+/* Message action buttons */
+.message-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  background: var(--primary-color);
+  color: var(--eurostat-white);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+}
+
+.action-button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
+.message.bot .action-button {
+  background: var(--primary-color);
+}
+
+.message.bot .action-button:hover {
+  background: var(--primary-hover);
+}

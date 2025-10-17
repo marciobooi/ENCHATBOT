@@ -6,6 +6,13 @@
 
 import type { Entities } from './entityExtractor';
 import type { Resolution } from './intentDetection';
+import { generateSupportEmailUrl } from './emailHelper';
+
+export interface ResolverAction {
+  type: 'mailto' | 'link' | 'button';
+  label: string;
+  url: string;
+}
 
 export interface ResolverResponse {
   text: string;
@@ -14,6 +21,7 @@ export interface ResolverResponse {
     source?: string;
     confidence?: number;
     suggestions?: string[];
+    actions?: ResolverAction[];
   };
 }
 
@@ -613,47 +621,26 @@ const responses = [
  * Troubleshooting handler
  */
 function handleTroubleshooting(): ResolverResponse {
+  // Generate mailto URL with diagnostic information
+  const mailtoUrl = generateSupportEmailUrl();
+
   return {
-    text: `**Troubleshooting & Support**
+    text: `Sorry to hear you're having trouble! Here are some quick tips:
 
-If you're experiencing issues, here are some common solutions:
+• **Try rephrasing** your question with different words
+• **Be specific** - include country names, years, or energy types
+• **Check examples** in the help panel (?) for query ideas
+• **Refresh the page** if the chatbot seems unresponsive
 
-🔧 **Common Issues & Solutions:**
-
-**Data Not Loading:**
-• Check your internet connection
-• Try refreshing the page
-• Clear browser cache and cookies
-
-**Search Not Working:**
-• Ensure your query includes specific energy terms
-• Try rephrasing your question
-• Use the help panel for query examples
-
-**Filters Not Applying:**
-• Check that your filter values are valid
-• Try resetting filters and reapplying
-• Some combinations may not have data available
-
-**Performance Issues:**
-• Large datasets may take time to load
-• Try narrowing your search criteria
-• Use filters to reduce data volume
-
-**API Errors:**
-• Temporary service issues - try again later
-• Check API status page for known outages
-• Contact support for persistent issues
-
-**Getting Help:**
-• Use the help panel (?) for guidance
-• Check the Eurostat website for documentation
-• Contact the Eurostat helpdesk for data-specific questions
-
-If these solutions don't resolve your issue, please provide more details about what you're experiencing.`,
-    type: 'help',
+If the problem persists, I can prepare a support email with diagnostic information to help our team investigate.`,
+    type: 'text',
     metadata: {
-      source: 'troubleshooting_handler'
+      source: 'troubleshooting_handler',
+      actions: [{
+        type: 'mailto',
+        label: 'Send Email to Helpdesk',
+        url: mailtoUrl
+      }]
     }
   };
 }

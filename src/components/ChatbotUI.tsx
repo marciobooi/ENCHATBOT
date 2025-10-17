@@ -11,6 +11,13 @@ interface Message {
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  metadata?: {
+    actions?: Array<{
+      type: 'mailto' | 'link' | 'button';
+      label: string;
+      url: string;
+    }>;
+  };
 }
 
 interface ChatbotUIProps {
@@ -108,6 +115,7 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
         text: responseResult.text,
         sender: 'bot',
         timestamp: new Date(),
+        metadata: responseResult.metadata
       };
 
       setMessages(prev => [...prev, botMessage]);
