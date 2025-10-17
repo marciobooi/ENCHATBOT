@@ -9,10 +9,24 @@ import { resolveIntents } from './intentDetection';
 import { extractEntities } from './entityExtractor';
 import { resolveResponse } from './responseResolver';
 import chatInsightsStore from '../state/globalChatState';
+import ChatStorage from './chatStorage';
 import type { Entities } from './entityExtractor';
 import type { Resolution } from './intentDetection';
 import type { PreprocessResult } from './preprocess';
 import type { ResolverResponse } from './responseResolver';
+
+interface Message {
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+  metadata?: {
+    actions?: Array<{
+      type: 'mailto' | 'link' | 'button';
+      label: string;
+      url: string;
+    }>;
+  };
+}
 
 export interface ProcessingResult {
   preprocessed: PreprocessResult;
@@ -43,7 +57,11 @@ export function processMessage(input: string): ProcessingResult {
 /**
  * Process a message and generate a response (complete pipeline)
  */
-export async function processAndRespond(input: string): Promise<ResolverResponse> {
+export async function processAndRespond(
+  input: string,
+  currentMessages: Message[],
+  currentMessageHistory: string[]
+): Promise<ResolverResponse> {
   // Process the message
   const processingResult = processMessage(input);
 
@@ -66,5 +84,14 @@ export async function processAndRespond(input: string): Promise<ResolverResponse
   await new Promise(resolve => setTimeout(resolve, thinkingDelay));
 
   // Generate the response
-  return await resolveResponse(processingResult.resolution, processingResult.entities);
+  const response = await resolveResponse(processingResult.resolution, processingResult.entities);
+
+  // Save chat history after successful processing
+  try {
+    await ChatStorage.saveChatHistory(currentMessages, currentMessageHistory);
+  } catch (error) {
+    console.error('Failed to save chat history:', error);
+  }
+
+  return response;
 }

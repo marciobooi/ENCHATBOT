@@ -5,6 +5,7 @@ import { useAriaLive } from '../utils/accessibility';
 import { Trash2 } from 'lucide-react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import chatInsightsStore from '../state/globalChatState';
+import ChatStorage from '../utils/chatStorage';
 import './ChatbotUI.css';
 import Message from './Message';
 import Button from './Button';
@@ -61,15 +62,23 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
 
   useEffect(scrollToBottom, [messages]);
 
-  // Auto-focus input on mount - aggressive focus to override any default behavior
+  // Load chat history on mount
   useEffect(() => {
-    // Use requestAnimationFrame to ensure it runs after render
-    requestAnimationFrame(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
+    const loadChatHistory = async () => {
+      try {
+        const savedHistory = await ChatStorage.loadChatHistory();
+        if (savedHistory && savedHistory.messages.length > 0) {
+          setMessages(savedHistory.messages);
+          setMessageHistory(savedHistory.messageHistory);
+          announceStatus('Previous chat history loaded');
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
       }
-    });
-  }, []);
+    };
+
+    loadChatHistory();
+  }, [announceStatus]);
 
   // Message history navigation
   const navigateHistory = useCallback((direction: 'up' | 'down') => {
@@ -99,7 +108,7 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
   }, []);
 
   // Clear chat
-  const clearChat = useCallback(() => {
+  const clearChat = useCallback(async () => {
     setMessages([
       {
         text: 'Hello! I\'m here to help with Eurostat energy data. What can I do for you?',
@@ -112,6 +121,8 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
     setInput('');
     // Clear chat insights store
     chatInsightsStore.clear();
+    // Clear stored chat history
+    await ChatStorage.clearChatHistory();
     announceStatus('Chat cleared. Starting fresh conversation.');
   }, [announceStatus]);
 
@@ -123,25 +134,32 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
   const handleSend = useCallback(async () => {
     if (!input.trim() || loading) return;
 
+    const currentInput = input;
+    const newMessageHistory = [...messageHistory, currentInput];
+
     // Add to message history
-    setMessageHistory(prev => [...prev, input]);
+    setMessageHistory(newMessageHistory);
     setHistoryIndex(-1);
 
     const userMessage: Message = {
-      text: input,
+      text: currentInput,
       sender: 'user',
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const messagesWithUser = [...messages, userMessage];
+    setMessages(messagesWithUser);
     announceMessage('Message sent');
 
     setInput('');
     setLoading(true);
 
+    let finalMessages = messagesWithUser;
+    const finalMessageHistory = newMessageHistory;
+
     try {
       // Process the message and generate response (complete pipeline)
-      const responseResult = await processAndRespond(input);
+      const responseResult = await processAndRespond(currentInput, finalMessages, finalMessageHistory);
 
       const botMessage: Message = {
         text: responseResult.text,
@@ -150,7 +168,8 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
         metadata: responseResult.metadata
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      finalMessages = [...messagesWithUser, botMessage];
+      setMessages(finalMessages);
       announceMessage('Bot response received');
     } catch {
       const errorMessage: Message = {
@@ -158,13 +177,14 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
         sender: 'bot',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      finalMessages = [...messagesWithUser, errorMessage];
+      setMessages(finalMessages);
       announceStatus('Error occurred while processing message');
     } finally {
       setLoading(false);
       announceStatus('Ready for next message');
     }
-  }, [input, loading, announceMessage, announceStatus]);
+  }, [input, loading, messages, messageHistory, announceMessage, announceStatus]);
 
   // Keyboard navigation hook - disabled when in modal (modal handles focus trapping)
   const { inputRef, containerRef, handleKeyDown } = useKeyboardNavigation({
@@ -175,6 +195,16 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
     onEscape: onClose || clearInput,
     disabled: loading || !!onClose, // Disable when in modal
   });
+
+  // Auto-focus input on mount - aggressive focus to override any default behavior
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure it runs after render
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    });
+  }, [inputRef]);
 
   // Expose handlers for modal keyboard shortcuts
   useImperativeHandle(ref, () => ({
