@@ -161,10 +161,9 @@ export const Modal: React.FC<ModalProps> = ({
         if (modal) {
           // Try to find focusable elements in order of preference
           const focusableSelectors = [
-            'button.close-button:not([disabled])',
+            'textarea:not([disabled])',
             'input[type="text"]:not([disabled])',
             'input[type="email"]:not([disabled])',
-            'textarea:not([disabled])',
             'button:not([disabled])',
             '[href]',
             'input:not([type="hidden"])',

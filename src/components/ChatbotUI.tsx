@@ -3,6 +3,7 @@ import { processAndRespond } from '../utils/messageProcessor';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { useAriaLive } from '../utils/accessibility';
 import { Trash2 } from 'lucide-react';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import chatInsightsStore from '../state/globalChatState';
 import './ChatbotUI.css';
 import Message from './Message';
@@ -60,11 +61,14 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
 
   useEffect(scrollToBottom, [messages]);
 
-  // Auto-focus input on mount
+  // Auto-focus input on mount - aggressive focus to override any default behavior
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    // Use requestAnimationFrame to ensure it runs after render
+    requestAnimationFrame(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    });
   }, []);
 
   // Message history navigation
@@ -189,14 +193,16 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
   };
 
   return (
-    <div
-      className="chatbot-container"
-      ref={containerRef}
-      onKeyDown={handleKeyDown}
-      role="application"
-      aria-label="Eurostat Energy Chatbot"
-      aria-describedby="chatbot-description"
-    >
+    <TooltipPrimitive.Provider delayDuration={300} skipDelayDuration={0}>
+      <div
+        className="chatbot-container"
+        ref={containerRef}
+        onKeyDown={handleKeyDown}
+        role="application"
+        aria-label="Eurostat Energy Chatbot"
+        aria-describedby="chatbot-description"
+        tabIndex={-1}
+      >
       <div className="chatbot-header" role="banner">
         <h1>Eurostat Energy Chatbot</h1>
         <div id="chatbot-description" className="sr-only">
@@ -287,6 +293,7 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
           disabled={loading}
           aria-describedby="input-help"
           aria-invalid={false}
+          autoFocus
         />
         <div id="input-help" className="sr-only">
           Press Enter to send, Shift+Enter for new line. Use ↑↓ to navigate message history.
@@ -300,6 +307,7 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
         </Button>
       </div>
     </div>
+    </TooltipPrimitive.Provider>
   );
 });
 
