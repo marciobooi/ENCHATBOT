@@ -66,7 +66,7 @@ export async function processAndRespond(
   const processingResult = processMessage(input);
 
   // Store the processed data in global state for debugging/logging
-  const insightEntry = chatInsightsStore.record({
+  chatInsightsStore.record({
     raw: input,
     cleaned: processingResult.preprocessed.cleaned,
     resolution: processingResult.resolution,
@@ -77,7 +77,7 @@ export async function processAndRespond(
     },
   });
 
-  console.log('Message processing result:', processingResult, insightEntry);
+//   console.log('Message processing result:', processingResult, insightEntry);
 
   // Simulate AI thinking time (1.5-3 seconds)
   const thinkingDelay = 2000 + Math.random() * 2000;
@@ -85,6 +85,9 @@ export async function processAndRespond(
 
   // Generate the response
   const response = await resolveResponse(processingResult.resolution, processingResult.entities);
+
+//   console.log('Message processing result:', response);
+
 
   // Save chat history after successful processing
   try {

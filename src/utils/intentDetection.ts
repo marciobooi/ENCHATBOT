@@ -148,7 +148,41 @@ const HELP_TERMS = [
   'help','how to use','what can you do','commands','instructions','guide','examples',
 ];
 
-const GREETING_BASE = ['hi','hello','hey','howdy','hiya','yo','greetings','gm','gn','gday',"g'day"];
+const GREETING_BASE = [
+  // --- Core single-word greetings ---
+  'hi', 'hello', 'hey', 'howdy', 'hiya', 'yo', 'greetings', 'welcome', 'salutations', 'sup',
+  'heya', 'heyo',
+
+  // --- Abbreviations / internet shorthand ---
+  'gm', 'ga', 'ge', 'gday', "g'day", 'gidday',
+
+  // --- Time-based greetings (commonly used as greetings) ---
+  'good morning', 'good afternoon', 'good evening', 'good day',
+  'morning', 'afternoon', 'evening',
+
+  // --- Friendly variants ---
+  'hi there', 'hello there', 'hey there',
+
+  // --- Group-address variants (very common in chats/teams) ---
+  'hi all', 'hi everyone', 'hi folks', 'hi team',
+  'hello all', 'hello everyone', 'hello folks', 'hello team',
+  'hey all', 'hey everyone', 'hey folks', 'hey team',
+  'hey yall', "hey y'all",
+
+  // --- Conversational openers typically used as greetings ---
+  "how's it going", 'hows it going', 'how is it going',
+  'how are you', 'how are ya', 'how are yall', "how are y'all", 'how are u',
+  'how are things', 'how goes it',
+  'how you doing', 'how ya doing', 'how ya doin', 'how you doin', 'how u doing',
+  "what's up", 'whats up', 'wassup', 'wazzup', 'whassup', 'waddup', 'what up',
+  "what's good", 'whats good', "what's new", 'whats new',
+  "what's happening", 'whats happening', "what's happenin", 'whats happenin',
+  "what's poppin", 'whats poppin',
+  'long time no see',
+
+  // --- Optional (often farewells; include only if you want them detected as greetings) ---
+  // 'good night', 'night', 'gn',
+];
 const THANKS_BASE = ['thanks','thank','thx','ty','appreciate','cheers'];
 const FAREWELL_BASE = ['bye','goodbye','cya','ttyl','later'];
 
@@ -247,15 +281,58 @@ const PATTERNS: Record<
     { pattern: RX.help, weight: 2.2 },
     { pattern: /\b(how do i .* (find|get|see)|examples)\b/u, weight: 1.6 },
   ],
-  greeting: [
-    { pattern: RX.greeting, weight: 2.0 },
-    { pattern: /\bgood (morning|afternoon|evening|day|night)\b/u, weight: 1.8 },
-    { pattern: /^(morning|afternoon|evening|night)[!.,\s]*$/u, weight: 1.8 },
-    { pattern: /[\u{1F44B}\u{1F60A}\u{1F642}\u{1F600}\u{1F603}\u{1F601}]/u, weight: 1.8 }, // 👋 🙂 🙂 😀 😃 😁
-    { pattern: /\b(hi there|hey there)\b/u, weight: 1.6 },
-    { pattern: /^dear\b/u, weight: 1.5 },
-    { pattern: (t: string) => (fuzzyTokenHit(t, ['hi','hey','hello'], 1, 2) ? 1.4 : 0), weight: 1 },
-  ],
+
+
+
+
+greeting: [
+  // 1) Your main list match (from GREETING_BASE)
+  { pattern: RX.greeting, weight: 2.6 }, // bumped slightly to reflect expanded coverage
+
+  // 2) Time-based greetings
+  { pattern: /\bgood\s+(?:morning|afternoon|evening|day)\b/iu, weight: 1.9 },
+
+  // 3) Standalone time words (avoid false positives by requiring the whole line)
+  { pattern: /^(?:morning|afternoon|evening|night|day)[!.,\s]*$/iu, weight: 1.7 },
+
+  // 4) Abbreviations & short forms (English)
+  { pattern: /\b(?:gm|ga|ge|gday|g'day|gidday)\b/iu, weight: 1.7 },
+
+  // 5) Friendly “there” variants
+  { pattern: /\b(?:hi|hello|hey)\s+there\b/iu, weight: 1.6 },
+
+  // 6) Group-address greetings (common in chats)
+  {
+    pattern: /\b(?:hi|hello|hey)[\s,.:;–—-]+(?:all|everyone|team|folks|y(?:'|’)?all)\b/iu,
+    weight: 1.6
+  },
+
+  // 7) Conversational openers often used as greetings
+  {
+    pattern: /\b(?:how(?:'|’)?s\s+(?:it\s+going|things)|how\s+(?:are\s+(?:you|ya|y(?:'|’)?all)|you\s+doing|ya\s+doin)|what(?:'|’)?s\s+(?:up|new|good|happening|happenin|poppin)|wass?up|wazzup|waddup|what\s+up)\b/iu,
+    weight: 1.5
+  },
+
+  // 8) Email-style salutations (anchor to start to avoid "oh dear")
+  { pattern: /^(?:dear\b|to\s+whom\s+it\s+may\s+concern\b)/iu, weight: 1.5 },
+
+  // 9) Emojis strongly associated with greetings
+  { pattern: /[👋😊🙂😀😃😁😄🤗]/u, weight: 1.4 },
+
+  // 10) Fuzzy hits for short English tokens (no non-English like "salut")
+  {
+    pattern: (t) => (fuzzyTokenHit(t, [
+      'hi','hello','hey','howdy','hiya','yo','heya','heyo','sup'
+    ], 1, 2) ? 1.3 : 0),
+    weight: 1
+  },
+
+  // 11) Optional: treat "good night / gn" as greeting (often farewell—keep low)
+  { pattern: /\bgood\s+night\b/iu, weight: 0.8 },
+  { pattern: /\bgn\b/iu, weight: 0.7 },
+],
+
+
   farewell: [
     { pattern: RX.farewell, weight: 2.0 },
     { pattern: /\b(see (ya|you)|take care|good night)\b/u, weight: 1.6 },
@@ -280,8 +357,9 @@ question: [
 
   smalltalk: [
     // common chit-chat; anchored loosely (normalize() lowercases input)
-    { pattern: /\b(how are you(?: doing)?|how's it going|hows it going|how are things|what's up|whats up|how do you do|long time no see|how are u|how r u)\b/u, weight: 3.0 }, // stronger than generic question
+    // Note: conversational openers like "how are you", "what's up" moved to greeting intent
     { pattern: /\b(nice to (meet|see) you|pleased to meet you)\b/u, weight: 2.2 },
+    { pattern: /\b(how do you do)\b/u, weight: 2.0 }, // keep this as it's more formal smalltalk
   ],
 } as const;
 
@@ -297,12 +375,12 @@ const PRECEDENCE: Intent[] = [
   'data_query',
   // Generic
   'command',
+  'greeting',
   'question',
   // Social / supportive
   'help',
   'thanks',
   'farewell',            // prefer farewell over greeting
-  'greeting',
   'smalltalk',           // after greeting (but see override below)
   // Fallback
   'statement',
@@ -333,7 +411,9 @@ if (!t || typeof t !== 'string' || !t.trim()) {
 
 
   // ✅ Smart normalization: treat interrogative-starts as questions even without '?'
-  if (/^\s*(who|what|when|where|why|how|which)\b/u.test(t) && !t.endsWith('?')) {
+  // But skip if it looks like a greeting to avoid false positives
+  const isGreeting = RX.greeting.test(t);
+  if (!isGreeting && /^\s*(who|what|when|where|why|how|which)\b/u.test(t) && !t.endsWith('?')) {
     t += '?';
   }
 
@@ -361,6 +441,11 @@ if (!t || typeof t !== 'string' || !t.trim()) {
   // If smalltalk and question both fired, nudge question down a bit (keeps resolver simple)
   if (scores.smalltalk > 0 && scores.question > 0) {
     scores.question -= 0.8; // small talk should beat a generic question
+  }
+
+  // If greeting and question both fired, nudge question down (conversational greetings should prevail)
+  if (scores.greeting > 0 && scores.question > 0) {
+    scores.question -= 2.5; // greeting should beat generic question
   }
 
   // If nothing fired, treat as a generic statement
