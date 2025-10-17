@@ -1,4 +1,5 @@
 import React from 'react';
+import { Bot, User } from 'lucide-react';
 
 interface ResolverAction {
   type: 'mailto' | 'link' | 'button';
@@ -26,6 +27,11 @@ const MessageComponent: React.FC<MessageProps> = ({ message }) => {
 
   return (
     <div className={`message ${message.sender}`}>
+      {message.sender === 'bot' && (
+        <div className="message-icon bot-icon">
+          <Bot size={16} />
+        </div>
+      )}
       <div className="message-bubble">
         {message.text}
         {message.metadata?.actions && message.metadata.actions.length > 0 && (
@@ -43,6 +49,11 @@ const MessageComponent: React.FC<MessageProps> = ({ message }) => {
           </div>
         )}
       </div>
+      {message.sender === 'user' && (
+        <div className="message-icon user-icon">
+          <User size={16} />
+        </div>
+      )}
     </div>
   );
 };
