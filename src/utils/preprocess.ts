@@ -172,7 +172,12 @@ const SOCIAL_TOKENS = new Set([
   // Time-based greetings - protect "day" from being corrected to "may"
   'morning','afternoon','evening','day','night',
   // Conversational words - protect "new" from being corrected to "now"
-  'new'
+  'new',
+  // Farewell-specific words - protect from spell correction
+  'cya','ttyl','gtg','g2g','brb','bbl','later','laters','laterz','peace','ciao','adieu','farewell',
+  'care','safe','luck','wishes','best',
+  // Critical farewell words being spell-corrected incorrectly:
+  'see','till','well','one','out','off','got','im'
 ]);
 
 const EN_STOPWORDS = new Set<string>([

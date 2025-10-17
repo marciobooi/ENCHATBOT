@@ -168,7 +168,7 @@ const GREETING_BASE = [
   'gm', 'ga', 'ge', 'gday', "g'day", 'g day', 'gidday',
 
   // --- Time-based greetings (commonly used as greetings) ---
-  'good morning', 'good afternoon', 'good evening', 'good day',
+  'good morning', 'good afternoon', 'good day',
   'morning', 'afternoon', 'evening',
 
   // --- Friendly variants ---
@@ -197,7 +197,40 @@ const GREETING_BASE = [
   // 'good night', 'night', 'gn',
 ];
 const THANKS_BASE = ['thanks','thank','thx','ty','appreciate','cheers'];
-const FAREWELL_BASE = ['bye','goodbye','cya','ttyl','later'];
+
+const FAREWELL_BASE = [
+  // --- Core single-word farewells ---
+  'bye', 'goodbye', 'farewell', 'adieu', 'cheerio', 'later', 'peace', 'ciao',
+  
+  // --- Abbreviations / internet shorthand ---
+  'cya', 'c ya', 'ttyl', 'gtg', 'g2g', 'gotta go', 'got to go', 'gotta run', 'got to run',
+  'brb', 'bbl', 'bb', 'bai', 'buh-bye', 'buhbye',
+  
+  // --- Time-based farewells ---
+  'good night', 'good evening', 'goodnight',
+  'night', 'nite', 'gn',
+  
+  // --- Friendly variants ---
+  'bye bye', 'bye-bye', 'byebye',
+  'see you', 'see ya', 'see you later', 'see ya later', 'see you soon', 'see ya soon',
+  'see you tomorrow', 'see ya tomorrow', 'see you around', 'see ya around',
+  'catch you later', 'catch ya later', 'talk to you later', 'talk to ya later',
+  
+  // --- Polite/formal farewells ---
+  'take care', 'have a good day', 'have a great day', 'have a nice day',
+  'have a good one', 'have a great one', 'have a nice one', 'have a wonderful day',
+  'have a good night',
+  'until next time', 'until we meet again', 'till next time', 'until later', 'till tomorrow',
+  
+  // --- Casual/slang farewells ---
+  'laters', 'l8r', 'laterz', 'later gator', 'catch you on the flip side',
+  'i m out', "i'm out", 'im out', 'i m off', "i'm off", 'im off',
+  'gotta bounce', 'got to bounce',
+  
+  // --- With well-wishes ---
+  'good luck', 'best wishes', 'all the best', 'take it easy',
+  'stay safe', 'be well', 'be safe',
+];
 
 const COUNTRY_NAMES = [
   'eu','eu27','euro area','european union','belgium','france','germany','netherlands','luxembourg','spain','portugal',
@@ -221,7 +254,7 @@ const RX: Record<string, RegExp> = {
   help: wordMatcher(HELP_TERMS),
   greeting: makeGreetingRegex(GREETING_BASE), // Use enhanced regex for multi-word phrases
   thanks: wordMatcher(THANKS_BASE),
-  farewell: wordMatcher(FAREWELL_BASE),
+  farewell: makeGreetingRegex(FAREWELL_BASE), // Use enhanced regex for multi-word phrases
   country: wordMatcher(COUNTRY_NAMES),
   iso2: wordMatcher(ISO2),
 };
@@ -347,8 +380,32 @@ greeting: [
 
 
   farewell: [
-    { pattern: RX.farewell, weight: 4.5 }, // Higher than greeting to ensure farewell wins
-    { pattern: /\b(see (ya|you)|take care|good night)\b/u, weight: 1.6 },
+    // 1) Main farewell list match (from FAREWELL_BASE)
+    { pattern: RX.farewell, weight: 5.0 }, // Higher than greeting (4.0) to ensure farewell wins
+    
+    // 2) Time-based farewells
+    { pattern: /\bgood\s+(?:night|evening)\b/iu, weight: 2.2 },
+    
+    // 3) "See you" variants with flexible whitespace (boost to beat greeting)
+    { pattern: /\bsee\s+(?:you|ya)(?:\s+(?:later|soon|tomorrow|around))?\b/iu, weight: 2.5 },
+    
+    // 4) "Take care" and well-wishes
+    { pattern: /\b(?:take\s+care|take\s+it\s+easy|stay\s+safe|be\s+well|be\s+safe)\b/iu, weight: 2.2 },
+    
+    // 5) "Have a" constructions (boost to beat question intent from "have")
+    { pattern: /\bhave\s+a\s+(?:good|great|nice|wonderful|lovely)\s+(?:day|night|one|time|weekend)\b/iu, weight: 2.5 },
+    
+    // 6) Leaving phrases (boost to beat statement)
+    { pattern: /\b(?:i\s*(?:m|am)\s+(?:out|off|leaving|going)|gotta\s+(?:go|run|bounce)|got\s+to\s+(?:go|run|bounce))\b/iu, weight: 2.3 },
+    
+    // 7) Abbreviations & short forms
+    { pattern: /\b(?:gtg|g2g|ttyl|brb|bbl|cya|c\s+ya)\b/iu, weight: 2.0 },
+    
+    // 8) Until next time variants (boost to beat question from "till")
+    { pattern: /\b(?:until|till)\s+(?:next\s+time|we\s+meet\s+again|later|tomorrow)\b/iu, weight: 2.3 },
+    
+    // 9) Good luck and best wishes
+    { pattern: /\b(?:good\s+luck|best\s+wishes|all\s+the\s+best)\b/iu, weight: 2.0 },
   ],
   thanks: [
     { pattern: RX.thanks, weight: 2.0 },
@@ -459,6 +516,16 @@ if (!t || typeof t !== 'string' || !t.trim()) {
   // If greeting and question both fired, nudge question down (conversational greetings should prevail)
   if (scores.greeting > 0 && scores.question > 0) {
     scores.question -= 2.5; // greeting should beat generic question
+  }
+
+  // If farewell and greeting both fired, farewell should always win
+  if (scores.farewell > 0 && scores.greeting > 0) {
+    scores.greeting -= 3.0; // farewell should beat greeting
+  }
+
+  // If farewell and question both fired, farewell should win
+  if (scores.farewell > 0 && scores.question > 0) {
+    scores.question -= 2.5; // farewell should beat question
   }
 
   // If nothing fired, treat as a generic statement

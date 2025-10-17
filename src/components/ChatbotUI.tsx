@@ -11,7 +11,7 @@ import Message from './Message';
 import Button from './Button';
 import HelpPanel from './HelpPanel';
 import Tooltip from './Tooltip';
-import { runGreetingTests } from '../utils/greetingTest';
+
 
 interface Message {
   text: string;
@@ -80,10 +80,7 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
 
     loadChatHistory();
 
-    // Run greeting tests after loading
-    setTimeout(() => {
-      runGreetingTests().catch(console.error);
-    }, 500);
+
   }, [announceStatus]);
 
   // Message history navigation
