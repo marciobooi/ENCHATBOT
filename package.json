@@ -8,7 +8,11 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:intents": "tsx src/tests/greetingTest.ts && tsx src/tests/farewellTest.ts && tsx src/tests/affirmativeNegativeTest.ts"
+      "test:intents": "tsx src/tests/greetingTest.ts && tsx src/tests/farewellTest.ts && tsx src/tests/affirmativeNegativeTest.ts",
+      "scan:accessibility": "node tools/scan-accessibility.mjs",
+      "scan:accessibility:json": "node tools/scan-accessibility.mjs --json",
+      "watch:accessibility": "node tools/scan-accessibility.mjs --watch",
+    "mcp:accessibility": "node tools/mcp-accessibility-scanner/cli.js"
   },
   "dependencies": {
     "@radix-ui/react-tooltip": "^1.2.8",
@@ -23,10 +27,13 @@
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
+    "axe-core": "^4.11.0",
+    "chokidar": "^4.0.3",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "puppeteer": "^24.25.0",
     "tsx": "^4.20.6",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
