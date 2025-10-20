@@ -86,8 +86,8 @@ function normalize(text: string): string {
   return (text ?? '')
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '') // strip diacritics
-    .replace(/[“”"']/g, '"')
-    .replace(/[‘’]/g, "'")
+    .replace(/[“”"]/g, '"') // normalize quotes but keep apostrophes
+    .replace(/[‘’]/g, "'") // normalize apostrophes
     .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width
     .replace(/\s+/g, ' ')
     .trim()
@@ -132,8 +132,8 @@ function replaceUrlsAndEmails(
 /* ----------------- Tokenization & elongations ----------------- */
 
 function tokenize(t: string): string[] {
-  // grab sequences of letters or digits; unicode aware
-  return (t.match(/[\p{L}\p{N}]+/gu) || []).slice(0, 1024);
+  // grab sequences of letters, digits, or apostrophes; unicode aware
+  return (t.match(/[\p{L}\p{N}']+/gu) || []).slice(0, 1024);
 }
 
 function collapseElongationsToken(token: string): { out: string; changed: boolean } {
@@ -163,6 +163,7 @@ function maskProfanity(text: string, removed: PreprocessResult['removed'], doMas
 
 const INTERROGATIVES = new Set(['who','what','when','where','why','how','which']);
 
+
 const SOCIAL_TOKENS = new Set([
   // Simple greetings and farewells
   'hi','hello','hey','bye','goodbye','thanks','thank','cheers','yo','hiya','gm','gn',
@@ -177,7 +178,13 @@ const SOCIAL_TOKENS = new Set([
   'cya','ttyl','gtg','g2g','brb','bbl','later','laters','laterz','peace','ciao','adieu','farewell',
   'care','safe','luck','wishes','best',
   // Critical farewell words being spell-corrected incorrectly:
-  'see','till','well','one','out','off','got','im'
+  'see','till','well','one','out','off','got','im',
+  // Affirmative/negative words - protect from spell correction:
+  'aye','right','bet','hmm','nay','wont','cant','dont','think','maybe',
+  // Greeting words and phrases - protect from spell correction:
+  'long', 'been', 'while',
+  // Contractions - protect from spell correction:
+  "don't", "can't", "won't", "i'm", "it's", "that's", "you're", "we're", "they're", "i've", "you've", "we've", "they've", "i'll", "you'll", "we'll", "they'll", "i'd", "you'd", "we'd", "they'd"
 ]);
 
 const EN_STOPWORDS = new Set<string>([

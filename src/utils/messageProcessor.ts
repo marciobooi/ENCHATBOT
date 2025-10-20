@@ -65,13 +65,6 @@ export async function processAndRespond(
   // Determine if this is the first user message in the conversation
   const userMessages = currentMessages.filter(msg => msg.sender === 'user');
   const isFirstMessage = userMessages.length === 0;
-  
-  console.log('🔍 Conversation state:', {
-    totalMessages: currentMessages.length,
-    userMessageCount: userMessages.length,
-    isFirstMessage,
-    input
-  });
 
   // Process the message (with conversation context)
   const processingResult = processMessage(input, isFirstMessage);

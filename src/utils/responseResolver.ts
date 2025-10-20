@@ -63,6 +63,12 @@ export async function resolveResponse(resolution: Resolution, entities: Entities
       case 'thanks':
         return handleThanks();
 
+      case 'affirmative':
+        return handleAffirmative();
+
+      case 'negative':
+        return handleNegative();
+
       case 'help':
         return handleHelp();
 
@@ -201,6 +207,68 @@ const responses = [
     type: 'text',
     metadata: {
       source: 'thanks_handler'
+    }
+  };
+}
+
+/**
+ * Affirmative responses
+ */
+let lastAffirmativeIndex = -1;
+
+function handleAffirmative(): ResolverResponse {
+  const responses = [
+    "Great! How can I help you with Eurostat energy data?",
+    "Perfect! What would you like to know about energy statistics?",
+    "Excellent! I'm ready to assist with energy data queries.",
+    "Sounds good! Let me know what energy information you need.",
+    "Alright! What energy dataset are you interested in?",
+    "Okay! Feel free to ask about any energy indicators.",
+    "Understood! How may I assist with your energy data needs?",
+    "Got it! What energy statistics can I help you explore?",
+    "Noted! I'm here to help with Eurostat energy information.",
+    "Right! What aspect of energy data would you like to explore?"
+  ];
+
+  const responseIndex = getRandomIndexExcludingLast(lastAffirmativeIndex, responses.length);
+  lastAffirmativeIndex = responseIndex;
+
+  return {
+    text: responses[responseIndex],
+    type: 'text',
+    metadata: {
+      source: 'affirmative_handler'
+    }
+  };
+}
+
+/**
+ * Negative responses
+ */
+let lastNegativeIndex = -1;
+
+function handleNegative(): ResolverResponse {
+  const responses = [
+    "No problem! Let me know if you change your mind about energy data.",
+    "Understood. I'm here if you need Eurostat energy statistics later.",
+    "Alright. Feel free to ask if you need energy information anytime.",
+    "Okay, no worries! I'll be here when you need energy data.",
+    "Got it. Let me know if there's anything else about energy statistics.",
+    "Fair enough! I'm available whenever you need energy data insights.",
+    "Understood. Don't hesitate to ask if you need energy information.",
+    "No problem at all! I'm ready when you need energy statistics.",
+    "Okay! Feel free to explore energy data whenever you're ready.",
+    "Noted. I'm here to help with energy data whenever you need it."
+  ];
+
+  const responseIndex = getRandomIndexExcludingLast(lastNegativeIndex, responses.length);
+  lastNegativeIndex = responseIndex;
+
+  return {
+    text: responses[responseIndex],
+    type: 'text',
+    metadata: {
+      source: 'negative_handler'
     }
   };
 }
