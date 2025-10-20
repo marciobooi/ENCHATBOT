@@ -104,46 +104,6 @@ export const Modal: React.FC<ModalProps> = ({
         }
         break;
     }
-
-    // Handle focus trapping with Tab
-    if (e.key === 'Tab') {
-      const modal = modalRef.current;
-      if (!modal) return;
-
-      // Get all focusable elements within the modal
-      const focusableElements = Array.from(
-        modal.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-      ).filter((element) => {
-        if (!element || element.tabIndex === -1) return false;
-        if (element.getAttribute('aria-hidden') === 'true') return false;
-        if ((element as HTMLButtonElement).disabled) return false;
-        if (element instanceof HTMLInputElement && element.type === 'hidden') return false;
-        const style = window.getComputedStyle(element);
-        return style.display !== 'none' && style.visibility !== 'hidden';
-      });
-
-      if (focusableElements.length === 0) return;
-
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
-      const activeElement = document.activeElement as HTMLElement;
-
-      if (e.shiftKey) {
-        // Shift + Tab
-        if (activeElement === firstElement || !focusableElements.includes(activeElement)) {
-          e.preventDefault();
-          lastElement.focus();
-        }
-      } else {
-        // Tab
-        if (activeElement === lastElement || !focusableElements.includes(activeElement)) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
-    }
   }, [isOpen, onClose, onSend, onClear, onNavigateHistory, onFocusInput]);
 
   // Handle modal opening/closing

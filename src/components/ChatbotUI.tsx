@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { processAndRespond } from '../utils/messageProcessor';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
-import { useAriaLive } from '../utils/accessibility';
+import { useAriaLive, getAccessibleFieldProps } from '../utils/accessibility';
 import { Trash2 } from 'lucide-react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import chatInsightsStore from '../state/globalChatState';
@@ -313,25 +313,41 @@ const ChatbotUI = forwardRef<ChatbotUIHandlers, ChatbotUIProps>(({ onClose }, re
       )}
 
       <div className="input-container" role="form" aria-label="Message input">
-        <label htmlFor="chat-input" className="sr-only">
-          Type your message about Eurostat energy data
-        </label>
-        <textarea
-          id="chat-input"
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Type your message... (Press / to focus, ↑↓ for history)"
-          rows={1}
-          disabled={loading}
-          aria-describedby="input-help"
-          aria-invalid={false}
-          autoFocus
-        />
-        <div id="input-help" className="sr-only">
-          Press Enter to send, Shift+Enter for new line. Use ↑↓ to navigate message history.
-        </div>
+        {(() => {
+          const label = 'Type your message about Eurostat energy data';
+          const description = 'Press Enter to send, Shift+Enter for new line. Use ↑↓ to navigate message history.';
+
+          const fieldProps = getAccessibleFieldProps({
+            label,
+            description,
+            required: false,
+            id: 'chat-input'
+          });
+
+          return (
+            <>
+              <label {...fieldProps.labelProps} className="sr-only">
+                {label}
+              </label>
+              <textarea
+                {...fieldProps.fieldProps}
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message... (Press / to focus, ↑↓ for history)"
+                rows={1}
+                disabled={loading}
+                autoFocus
+              />
+              {fieldProps.descriptionProps && (
+                <div {...fieldProps.descriptionProps} className="sr-only">
+                  {description}
+                </div>
+              )}
+            </>
+          );
+        })()}
         <Button
           onClick={handleSend}
           disabled={!input.trim() || loading}

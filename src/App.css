@@ -21,6 +21,24 @@ body {
   line-height: 1.6;
 }
 
+/* Skip Link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--eurostat-blue);
+  color: var(--eurostat-white);
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 1000;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
 .app-container {
   min-height: 100vh;
   display: flex;
