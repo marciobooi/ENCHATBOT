@@ -3,10 +3,16 @@
 // Fast, no deps. Weighted scoring + domain-first precedence + explicit modifiers.
 // Exposes: detectIntent(text) -> Intent, and resolveIntents(text) -> Resolution for diagnostics.
 
+import { PATTERNS, setFuzzyTokenHit } from '../data/patterns';
+import { RX } from '../data/precompiledMatchers';
+import { AMBIGUOUS_BASE, GROUP_ADDRESS_WORDS, FAREWELL_INDICATORS } from '../data/lexicon';
+
 export const INTENTS = [
   'greeting',
   'farewell',
   'thanks',
+  'affirmative',
+  'negative',
   'help',
   'troubleshooting',
   'download_request',
@@ -25,8 +31,6 @@ export const INTENTS = [
 ] as const;
 
 export type Intent = typeof INTENTS[number];
-
-type Pattern = RegExp | ((t: string) => number);
 export type Scores = Record<Intent, number>;
 
 export interface Resolution {
@@ -90,163 +94,7 @@ function fuzzyTokenHit(text: string, vocab: string[], maxDist = 1, minLen = 2): 
   return false;
 }
 
-function escapeRe(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-// Word-matcher builder (pre-compiled, unicode aware)
-const wordMatcher = (list: string[], flags = 'u') =>
-  new RegExp(`\\b(?:${list.map(escapeRe).join('|')})\\b`, flags);
-
-// Enhanced greeting regex builder that handles multi-word phrases with flexible whitespace
-function makeGreetingRegex(base: string[], flags = 'iu') {
-  const single = base.filter(p => !p.includes(' ')).map(escapeRe);
-  const multi = base
-    .filter(p => p.includes(' '))
-    .map(p => escapeRe(p).replace(/\s+/g, '\\s+')); // allow any whitespace
-
-  // Word-boundaries to avoid "hi" matching "highlight"
-  return new RegExp(`\\b(?:${[...single, ...multi].join('|')})\\b`, flags);
-}
-
-/* ===================== Domain lexicon ===================== */
-
-const ENERGY_TERMS = [
-  'energy balance','gross inland consumption','final energy consumption','primary energy',
-  'electricity','power','gas','natural gas','renewables','renewable','wind','solar','hydro',
-  'oil','petroleum','coal','lignite','biomass','biofuel','heat','district heating','hydrogen',
-  'nuclear','emissions','emission','co2','ghg','greenhouse gas','price','prices','tariff','tariffs',
-  'consumption','production','generation','imports','import','exports','export','net imports','storage','stocks',
-  'capacity','load','demand','peak','efficiency','intensity','kwh','mwh','gwh','twh','toe','ktoe',
-  'nrg','eurostat','dataset','table',
-];
-
-// Measurement nouns (to strengthen noun-phrase data queries)
-const MEASURE_TERMS = [
-  'consumption','production','generation','price','prices','tariff','tariffs',
-  'emission','emissions','capacity','demand','intensity','efficiency','load','stock','stocks','storage'
-];
-
-const VIZ_TERMS = [
-  'show','plot','chart','visualise','visualize','draw','map','graph','heatmap',
-  'bar chart','line chart','pie','scatter','choropleth','dashboard','table','pivot',
-];
-
-const DOWNLOAD_TERMS = [
-  'download','export','save as','csv','xlsx','xls','json','png','jpg','jpeg','svg','pdf','api','share','embed','link',
-];
-
-const FILTER_TERMS = [
-  'country','eu','eu27','member state','sector','nace','household','households','industry','transport','services',
-  'residential','fuel','product','unit','per capita','nuts','nuts2','nuts3','region','by country','by sector',
-];
-
-const TIME_KEYWORDS = [
-  'monthly','quarterly','annual','annualy','annually','trend','over time','ytd','last year','this year','latest',
-  'most recent','current','q1','q2','q3','q4','seasonal','winter','summer','spring','autumn','fall',
-];
-
-/** IMPORTANT: removed raw "how is/are/was/were" from metadata terms (too broad) */
-const METADATA_TERMS = [
-  'definition','metadata','methodology','methodologies',
-  'calculated','computed','source','data source','dataset','table code','frequency','release','last update','revision',
-];
-
-const COMPARE_TERMS = [
-  'compare','vs','versus','difference between','rank','ranking','top','bottom','lowest','highest',
-];
-
-const HELP_TERMS = [
-  'help','how to use','what can you do','commands','instructions','guide','examples',
-];
-
-const GREETING_BASE = [
-  // --- Core single-word greetings ---
-  'hi', 'hello', 'hey', 'howdy', 'hiya', 'yo', 'greetings', 'welcome', 'salutations', 'sup',
-  'heya', 'heyo',
-
-  // --- Abbreviations / internet shorthand ---
-  'gm', 'ga', 'ge', 'gday', "g'day", 'g day', 'gidday',
-
-  // --- Time-based greetings (commonly used as greetings) ---
-  'good morning', 'good afternoon', 'good day',
-  'morning', 'afternoon', 'evening',
-  // Note: "good evening" is ambiguous (context-dependent), but "evening" alone is a greeting
-
-  // --- Friendly variants ---
-  'hi there', 'hello there', 'hey there',
-
-  // --- Group-address variants (very common in chats/teams) ---
-  'hi all', 'hi everyone', 'hi folks', 'hi team', 'hi guys',
-  'hello all', 'hello everyone', 'hello folks', 'hello team', 'hello guys',
-  'hey all', 'hey everyone', 'hey folks', 'hey team', 'hey guys',
-  'hey yall', "hey y'all",
-
-  // --- Conversational openers typically used as greetings ---
-  "how's it going", 'hows it going', 'how is it going', 'how s it going',
-  'how are you', 'how are ya', 'how are yall', "how are y'all", 'how are u',
-  'how are you doing', 'how you doing',
-  'how are things', 'how goes it', "how's everything", 'hows everything', 'how s everything',
-  'how ya doing', 'how ya doin', 'how you doin', 'how u doing',
-  "what's up", 'whats up', 'what s up', 'wassup', 'wazzup', 'whassup', 'waddup', 'what up',
-  "what's good", 'whats good', 'what s good', "what's new", 'whats new', 'what s new',
-  "what's happening", 'whats happening', 'what s happening', "what's happenin", 'whats happenin',
-  "what's poppin", 'whats poppin', 'what s poppin',
-  'long time no see', "it's been a while", 'its been a while', 'it s been a while',
-  'nice to see you',
-
-  // --- Optional (often farewells; include only if you want them detected as greetings) ---
-  // 'good night', 'night', 'gn',
-];
-const THANKS_BASE = ['thanks','thank','thx','ty','appreciate','cheers'];
-
-const FAREWELL_BASE = [
-  // --- Core single-word farewells ---
-  'bye', 'goodbye', 'farewell', 'adieu', 'cheerio', 'later', 'peace', 'ciao',
-  
-  // --- Abbreviations / internet shorthand ---
-  'cya', 'c ya', 'ttyl', 'gtg', 'g2g', 'gotta go', 'got to go', 'gotta run', 'got to run',
-  'brb', 'bbl', 'bb', 'bai', 'buh-bye', 'buhbye',
-  
-  // --- Time-based farewells ---
-  'good night', 'goodnight', 'gn',
-  // Note: "good evening", "night", "nite" moved to ambiguous intent for context-based detection
-  
-  // --- Friendly variants ---
-  'bye bye', 'bye-bye', 'byebye',
-  'see you', 'see ya', 'see you later', 'see ya later', 'see you soon', 'see ya soon',
-  'see you tomorrow', 'see ya tomorrow', 'see you around', 'see ya around',
-  'catch you later', 'catch ya later', 'talk to you later', 'talk to ya later',
-  
-  // --- Polite/formal farewells ---
-  'take care', 'have a good day', 'have a great day', 'have a nice day',
-  'have a good one', 'have a great one', 'have a nice one', 'have a wonderful day',
-  'have a good night',
-  'until next time', 'until we meet again', 'till next time', 'until later', 'till tomorrow',
-  
-  // --- Casual/slang farewells ---
-  'laters', 'l8r', 'laterz', 'later gator', 'catch you on the flip side',
-  'i m out', "i'm out", 'im out', 'i m off', "i'm off", 'im off',
-  'gotta bounce', 'got to bounce',
-  
-  // --- With well-wishes ---
-  'good luck', 'best wishes', 'all the best', 'take it easy',
-  'stay safe', 'be well', 'be safe',
-];
-
-// Context-dependent phrases that can be either greeting or farewell
-const AMBIGUOUS_BASE = [
-  'good evening',
-  // Note: "evening" removed - behaves like "morning"/"afternoon" (always greeting when standalone)
-  'night',
-  'nite',
-];
-
-// Group address words that indicate greeting context
-const GROUP_ADDRESS_WORDS = ['everyone', 'folks', 'all', 'team', 'guys', 'yall', "y'all"];
-
-// Farewell indicator words
-const FAREWELL_INDICATORS = ['goodbye', 'bye', 'see you', 'see ya', 'take care', 'later', 'leaving', 'going'];
+setFuzzyTokenHit(fuzzyTokenHit);
 
 /**
  * Resolves ambiguous phrase to 'greeting' or 'farewell' based on context
@@ -301,207 +149,6 @@ function resolveAmbiguous(phrase: string, text: string, isFirstMessage: boolean)
   return 'farewell';
 }
 
-const COUNTRY_NAMES = [
-  'eu','eu27','euro area','european union','belgium','france','germany','netherlands','luxembourg','spain','portugal',
-  'italy','ireland','denmark','sweden','finland','poland','czechia','czech republic','slovakia','slovenia','hungary',
-  'austria','romania','bulgaria','greece','croatia','estonia','latvia','lithuania','malta','cyprus',
-];
-
-// IMPORTANT: lower-case to match normalized text
-const ISO2 = ['at','be','bg','hr','cy','cz','dk','ee','fi','fr','de','el','gr','hu','ie','it','lv','lt','lu','mt','nl','pl','pt','ro','sk','si','es','se'];
-
-/* Precompiled matchers */
-const RX: Record<string, RegExp> = {
-  energy: wordMatcher(ENERGY_TERMS),
-  measure: wordMatcher(MEASURE_TERMS),
-  viz: wordMatcher(VIZ_TERMS),
-  download: wordMatcher(DOWNLOAD_TERMS),
-  filter: wordMatcher(FILTER_TERMS),
-  timeKw: wordMatcher(TIME_KEYWORDS),
-  metadata: wordMatcher(METADATA_TERMS),
-  compare: wordMatcher(COMPARE_TERMS),
-  help: wordMatcher(HELP_TERMS),
-  greeting: makeGreetingRegex(GREETING_BASE), // Use enhanced regex for multi-word phrases
-  thanks: wordMatcher(THANKS_BASE),
-  farewell: makeGreetingRegex(FAREWELL_BASE), // Use enhanced regex for multi-word phrases
-  country: wordMatcher(COUNTRY_NAMES),
-  iso2: wordMatcher(ISO2),
-};
-
-/* ===================== Patterns & weights ===================== */
-
-const PATTERNS: Record<
-  Exclude<Intent, 'statement' | 'invalid'>,
-  { pattern: Pattern; weight: number }[]
-> = {
-  troubleshooting: [
-    { pattern: /\b(does(?:["']?n["']?t| not)\s+(?:work|load|function|start|open|connect|display|show|appear|run))\b/u, weight: 3.5 },
-    { pattern: /\bdoes\s+t\s+(?:work|load|function|start|open|connect|display|show|appear|run)\b/u, weight: 3.5 },
-    { pattern: /\b(can(?:["']?t|not)|cannot|fail(?:ed|s)?|error|exception|crash(?:ed|es)?|timeout|broken|bug|slow|stuck|load(?:ing)? issue|permission denied|unauthorized|problem|issue|not working|won't work|doesn't work)\b/u, weight: 3.2 },
-  ],
-  download_request: [
-    { pattern: RX.download, weight: 2.6 },
-    { pattern: /\b(save|export|download)\b.*\b(csv|xlsx?|json|png|jpe?g|svg|pdf)\b/u, weight: 3.0 },
-    { pattern: /\b(api|endpoint|link|url)\b/u, weight: 1.6 },
-    { pattern: /\bhttps?:\/\/\S+\.(csv|xlsx?|json|png|jpe?g|svg|pdf)\b/u, weight: 3.0 },
-  ],
-  viz_request: [
-    { pattern: RX.viz, weight: 2.7 },
-    { pattern: /\b(can|could|would|please|kindly)\b.*\b(show|plot|chart|visuali[sz]e|draw|map|graph|heatmap|bar chart|line chart|pie|scatter|choropleth|dashboard|table|pivot)\b/u, weight: 2.2 },
-    { pattern: (t: string) => (RX.energy.test(t) && RX.viz.test(t) ? 3.1 : 0), weight: 1 },
-  ],
-  data_query: [
-    // Question + energy keyword
-    { pattern: /\b(what|how much|how many|show me|give me|value of|latest|evolution|time series|trend|increase|decrease)\b.*\b(electricity|gas|natural gas|renewables?|wind|solar|hydro|oil|petroleum|coal|lignite|biomass|biofuel|heat|hydrogen|nuclear|emissions?|co2|ghg|price|prices|tariffs?|consumption|production|generation|imports?|exports?|capacity|demand|kwh|mwh|gwh|twh|toe|ktoe)\b/u, weight: 2.6 },
-    // Ending with ? and containing energy term
-    { pattern: (t: string) => (t.endsWith('?') && RX.energy.test(t) ? 2.2 : 0), weight: 1 },
-    // Weak nudge when any energy term exists
-    { pattern: RX.energy, weight: 0.9 },
-    // Energy + measurement noun → strong noun-phrase data query
-    { pattern: (t: string) => (RX.energy.test(t) && RX.measure.test(t) ? 2.4 : 0), weight: 1 },
-    // Energy + filter mention (country/sector/etc.) → query intent
-    { pattern: (t: string) => (RX.energy.test(t) && (RX.country.test(t) || RX.filter.test(t)) ? 1.8 : 0), weight: 1 },
-    // Direct pairing like "electricity ... consumption"
-    { pattern: /\b(electricity|gas|natural gas|renewables?|wind|solar|hydro|oil|petroleum|coal|lignite|biomass|biofuel|heat|hydrogen|nuclear|emissions?|co2|ghg|price|prices|tariffs?|consumption|production|generation|capacity|demand)\b.*\b(consumption|production|prices?|emissions?|capacity|generation|demand|intensity|efficiency)\b/u, weight: 2.0 },
-  ],
-  filter_change: [
-    { pattern: RX.filter, weight: 1.9 },
-    { pattern: RX.country, weight: 1.9 },
-    { pattern: RX.iso2, weight: 1.6 }, // now matches (lowercased)
-    { pattern: /\b(by|for|in)\b\s+(country|sector|fuel|product|unit|nace|households?|industry|transport|services|residential|region|nuts\d?)\b/u, weight: 2.1 },
-    { pattern: /\bper[- ]?capita\b/u, weight: 1.6 },
-    { pattern: /\beu[- ]?27\b/u, weight: 1.4 }, // eu-27 or eu 27
-  ],
-  time_change: [
-    { pattern: /\b(19|20)\d{2}\b/u, weight: 1.8 }, // any year 1900–2099
-    { pattern: /\b(from|since|between)\s+(19|20)\d{2}\s+(to|and|[-–—])\s*(19|20)\d{2}\b/u, weight: 2.3 },
-    { pattern: /\b(?:q[1-4]\s*(?:19|20)\d{2}|(?:19|20)\d{2}\s*q[1-4])\b/u, weight: 2.0 },
-    { pattern: RX.timeKw, weight: 1.8 },
-    { pattern: /\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\b/u, weight: 1.4 },
-  ],
-  metadata_request: [
-    { pattern: RX.metadata, weight: 2.9 }, // domain metadata words (no raw "how is/are")
-    // explicit "how ... <method>":
-    { pattern: /\b(how (?:is|are|was|were))\b.*\b(calculated|computed|defined|measured|collected|estimated|compiled|aggregated|imputed)\b/u, weight: 2.8 },
-    { pattern: /\b(where does|what is the source|data source)\b/u, weight: 2.0 },
-    { pattern: /\bdefinition of\b/u, weight: 2.2 },
-  ],
-  compare_request: [
-    { pattern: RX.compare, weight: 2.8 }, // bumped from 2.4
-    { pattern: /^\s*compare\b/u, weight: 0.8 }, // start-anchored nudge
-    { pattern: /\b(compare|vs|versus)\b.*\b([a-z][a-z]+)\b.*\b([a-z][a-z]+)\b/u, weight: 2.0 },
-    { pattern: /\b(top\s*\d+|bottom\s*\d+|lowest\s*\d+|highest\s*\d+)\b/u, weight: 2.0 },
-  ],
-  help: [
-    { pattern: RX.help, weight: 2.2 },
-    { pattern: /\b(how do i .* (find|get|see)|examples)\b/u, weight: 1.6 },
-  ],
-
-
-
-
-greeting: [
-  // 1) Your main list match (from GREETING_BASE)
-  { pattern: RX.greeting, weight: 4.0 }, // Significantly increased to ensure greetings beat questions
-
-  // 2) Time-based greetings
-  { pattern: /\bgood\s+(?:morning|afternoon|evening|day)\b/iu, weight: 1.9 },
-
-  // 3) Standalone time words (avoid false positives by requiring the whole line)
-  { pattern: /^(?:morning|afternoon|evening|night|day)[!.,\s]*$/iu, weight: 1.7 },
-
-  // 4) Abbreviations & short forms (English)
-  { pattern: /\b(?:gm|ga|ge|gday|g'day|gidday)\b/iu, weight: 1.7 },
-
-  // 5) Friendly “there” variants
-  { pattern: /\b(?:hi|hello|hey)\s+there\b/iu, weight: 1.6 },
-
-  // 6) Group-address greetings (common in chats)
-  {
-    pattern: /\b(?:hi|hello|hey)[\s,.:;–—-]+(?:all|everyone|team|folks|y(?:'|’)?all)\b/iu,
-    weight: 1.6
-  },
-
-  // 7) Conversational openers often used as greetings
-  {
-    pattern: /\b(?:how(?:'|’)?s\s+(?:it\s+going|things)|how\s+(?:are\s+(?:you|ya|y(?:'|’)?all)|you\s+doing|ya\s+doin)|what(?:'|’)?s\s+(?:up|new|good|happening|happenin|poppin)|wass?up|wazzup|waddup|what\s+up)\b/iu,
-    weight: 1.5
-  },
-
-  // 8) Email-style salutations (anchor to start to avoid "oh dear")
-  { pattern: /^(?:dear\b|to\s+whom\s+it\s+may\s+concern\b)/iu, weight: 1.5 },
-
-  // 9) Emojis strongly associated with greetings
-  { pattern: /[👋😊🙂😀😃😁😄🤗]/u, weight: 1.4 },
-
-  // 10) Fuzzy hits for short English tokens (no non-English like "salut")
-  {
-    pattern: (t) => (fuzzyTokenHit(t, [
-      'hi','hello','hey','howdy','hiya','yo','heya','heyo','sup'
-    ], 1, 2) ? 1.3 : 0),
-    weight: 1
-  },
-],
-
-
-  farewell: [
-    // 1) Main farewell list match (from FAREWELL_BASE)
-    { pattern: RX.farewell, weight: 5.0 }, // Higher than greeting (4.0) to ensure farewell wins
-    
-    // 2) Time-based farewells
-    { pattern: /\bgood\s+(?:night|evening)\b/iu, weight: 2.2 },
-    
-    // 3) "See you" variants with flexible whitespace (boost to beat greeting)
-    { pattern: /\bsee\s+(?:you|ya)(?:\s+(?:later|soon|tomorrow|around))?\b/iu, weight: 2.5 },
-    
-    // 4) "Take care" and well-wishes
-    { pattern: /\b(?:take\s+care|take\s+it\s+easy|stay\s+safe|be\s+well|be\s+safe)\b/iu, weight: 2.2 },
-    
-    // 5) "Have a" constructions (boost to beat question intent from "have")
-    { pattern: /\bhave\s+a\s+(?:good|great|nice|wonderful|lovely)\s+(?:day|night|one|time|weekend)\b/iu, weight: 2.5 },
-    
-    // 6) Leaving phrases (boost to beat statement)
-    { pattern: /\b(?:i\s*(?:m|am)\s+(?:out|off|leaving|going)|gotta\s+(?:go|run|bounce)|got\s+to\s+(?:go|run|bounce))\b/iu, weight: 2.3 },
-    
-    // 7) Abbreviations & short forms
-    { pattern: /\b(?:gtg|g2g|ttyl|brb|bbl|cya|c\s+ya)\b/iu, weight: 2.0 },
-    
-    // 8) Until next time variants (boost to beat question from "till")
-    { pattern: /\b(?:until|till)\s+(?:next\s+time|we\s+meet\s+again|later|tomorrow)\b/iu, weight: 2.3 },
-    
-    // 9) Good luck and best wishes
-    { pattern: /\b(?:good\s+luck|best\s+wishes|all\s+the\s+best)\b/iu, weight: 2.0 },
-  ],
-  thanks: [
-    { pattern: RX.thanks, weight: 2.0 },
-    { pattern: /\b(appreciate (it|that))\b/u, weight: 2.0 },
-  ],
-  command: [
-    // NOTE: removed 'compare' from this verb list (we have compare_request)
-    { pattern: /^\s*(show|plot|chart|visuali[sz]e|draw|map|graph|table|list|filter|set|change|update|select|open|close|reset|download|export|share|explain|define|calculate|generate|summarize|rank)\b/u, weight: 2.5 },
-    { pattern: /\b(please|kindly)\b/u, weight: 1.2 },
-    { pattern: /\b(let'?s)\b/u, weight: 1.3 },
-    { pattern: /\b(i (need|want) you to|make sure to|be sure to)\b/u, weight: 1.8 },
-  ],
-
-question: [
-  { pattern: (t: string) => (t.endsWith('?') ? 2.3 : 0), weight: 1 },
-  { pattern: /^\s*(who|what|when|where|why|how|which|can|could|do|does|is|are|will|would|should|may|might|have|has|did)\b/u, weight: 2.4 }, // was 2.0
-  { pattern: /\b(any idea|could you tell me|do you know|i wonder|is it possible)\b/u, weight: 1.6 },
-],
-
-  smalltalk: [
-    // common chit-chat; anchored loosely (normalize() lowercases input)
-    // Note: conversational openers like "how are you", "what's up" moved to greeting intent
-    { pattern: /\b(nice to (meet|see) you|pleased to meet you)\b/u, weight: 2.2 },
-    { pattern: /\b(how do you do)\b/u, weight: 2.0 }, // keep this as it's more formal smalltalk
-  ],
-
-  ambiguous: [
-    // Context-dependent phrases resolved by resolveAmbiguous() function
-    { pattern: makeGreetingRegex(AMBIGUOUS_BASE), weight: 2.5 }
-  ],
-} as const;
 
 /* ===================== Precedence & policy ===================== */
 
@@ -537,13 +184,10 @@ const COINTENT_FRACTION = 0.6;  // co-intents >= 60% of the top score
 /* ===================== Scoring ===================== */
 
 export function score(text: string, isFirstMessage = false): Scores {
-
-let t = normalize(text);
+  let t = normalize(text);
   const scores = Object.fromEntries(INTENTS.map(i => [i, 0])) as Scores;
 
-
-  
-if (!t || typeof t !== 'string' || !t.trim()) {
+  if (!t || typeof t !== 'string' || !t.trim()) {
     scores.invalid = 1;
     return scores;
   }
