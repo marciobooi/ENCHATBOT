@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:intents": "tsx src/tests/greetingTest.ts && tsx src/tests/farewellTest.ts && tsx src/tests/affirmativeNegativeTest.ts"
   },
   "dependencies": {
     "@radix-ui/react-tooltip": "^1.2.8",
