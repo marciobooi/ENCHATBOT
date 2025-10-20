@@ -47,7 +47,26 @@ export const COMPARE_TERMS = [
 ];
 
 export const HELP_TERMS = [
-  'help','how to use','what can you do','commands','instructions','guide','examples',
+  'help',
+  'help me',
+  'can you help',
+  'how to use',
+  'how do i',
+  'how do you',
+  'what can you do',
+  'commands',
+  'instructions',
+  'guide',
+  'guidelines',
+  'manual',
+  'examples',
+  'show me',
+  'usage',
+  'need help',
+  'need assistance',
+  'support',
+  'how does this work',
+  'how it works'
 ];
 
 /* ===================== Social Interaction Vocabulary ===================== */
@@ -87,7 +106,24 @@ export const GREETING_BASE = [
   'nice to see you',
 ];
 
-export const THANKS_BASE = ['thanks','thank','thx','ty','appreciate','cheers'];
+export const THANKS_BASE = [
+  // Core
+  'thanks', 'thank', 'thank you', 'thank u',
+
+  // Abbreviations / Short forms
+  'thx', 'ty', 'tnx', 'tks',
+
+  // Casual / Friendly
+  'thanks a lot', 'thanks so much', 'thanks very much',
+  'thank you so much', 'thank you very much',
+  'many thanks', 'much obliged',
+
+  // Appreciation phrases
+  'appreciate', 'appreciate it', 'really appreciate', 'greatly appreciate',
+
+  // Informal / Slang
+  'cheers', 'props', 'big thanks', 'big thank you'
+];
 
 export const FAREWELL_BASE = [
   // --- Core single-word farewells ---

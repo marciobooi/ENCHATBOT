@@ -46,7 +46,7 @@ function normalize(text: string): string {
   return (text ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')   // strip diacritics
-    .replace(/[“”"']/g, '"')
+    .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
     .toLowerCase()
     .replace(/\s+/g, ' ')
@@ -251,12 +251,15 @@ export function score(text: string, isFirstMessage = false): Scores {
       const phrasePattern = new RegExp(`\\b${phraseWords.join('\\s+')}\\b`, 'iu');
       
       if (phrasePattern.test(t)) {
+        const ambiguousScore = scores.ambiguous;
         const resolved = resolveAmbiguous(phrase, t, isFirstMessage);
         
         if (resolved === 'greeting') {
-          scores.greeting += scores.ambiguous;
+          scores.greeting += ambiguousScore;
+          scores.farewell = Math.max(0, scores.farewell - ambiguousScore);
         } else {
-          scores.farewell += scores.ambiguous;
+          scores.farewell += ambiguousScore;
+          scores.greeting = Math.max(0, scores.greeting - ambiguousScore);
         }
         scores.ambiguous = 0;
         break;

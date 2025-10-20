@@ -28,7 +28,8 @@ export const PATTERNS: Record<
   troubleshooting: [
     { pattern: /\b(does(?:["']?n["']?t| not)\s+(?:work|load|function|start|open|connect|display|show|appear|run))\b/u, weight: 3.5 },
     { pattern: /\bdoes\s+t\s+(?:work|load|function|start|open|connect|display|show|appear|run)\b/u, weight: 3.5 },
-    { pattern: /\b(can(?:["']?t|not)|cannot|fail(?:ed|s)?|error|exception|crash(?:ed|es)?|timeout|broken|bug|slow|stuck|load(?:ing)? issue|permission denied|unauthorized|problem|issue|not working|won't work|doesn't work)\b/u, weight: 3.2 },
+    { pattern: /\b(?:can(?:["']?t|\s*not)|cannot)\b.*\b(work|load|function|start|open|connect|display|show|appear|run)\b/u, weight: 3.4 },
+    { pattern: /\b(fail(?:ed|s)?|error|exception|crash(?:ed|es)?|timeout|broken|bug|slow|stuck|load(?:ing)? issue|permission denied|unauthorized|problem|issue|not working|won't work|doesn't work)\b/u, weight: 3.2 },
   ],
   
   download_request: [
@@ -84,10 +85,38 @@ export const PATTERNS: Record<
     { pattern: /\b(top\s*\d+|bottom\s*\d+|lowest\s*\d+|highest\s*\d+)\b/u, weight: 2.0 },
   ],
   
-  help: [
-    { pattern: RX.help, weight: 2.2 },
-    { pattern: /\b(how do i .* (find|get|see)|examples)\b/u, weight: 1.6 },
-  ],
+help: [
+  // Your main dynamic pattern generated from the upgraded regex
+  { pattern: RX.help, weight: 2.3 }, // small bump for stronger coverage
+
+  // "how do i ... (find|get|see)" + "examples" (your original), broadened a bit
+  { pattern: /\bhow\s+do\s+i\b.*\b(find|get|see|access|open|download|configure|set\s*up)\b/iu, weight: 1.7 },
+  { pattern: /\b(?:example|examples|sample|samples|snippet|snippets)\b/iu, weight: 1.3 },
+
+  // Imperative help signals & politeness markers
+  { pattern: /\b(?:please|pls)\s+(?:help|assist|advise)\b/iu, weight: 1.6 },
+  { pattern: /\b(?:can|could|would)\s+you\s+(?:help|assist|show|guide|explain)\b/iu, weight: 1.5 },
+  { pattern: /\b(?:i\s+need|need|looking\s+for|want)\s+(?:help|assistance|support)\b/iu, weight: 1.5 },
+
+  // Discovery/obtaining verbs commonly tied to help-seeking
+  { pattern: /\b(?:where\s+can\s+i|how\s+do\s+i)\s+(?:find|get|see|access|open|download)\b/iu, weight: 1.5 },
+  { pattern: /\bshow\s+me\s+how\b/iu, weight: 1.4 },
+  { pattern: /\bwalk\s+me\s+through\b/iu, weight: 1.4 },
+  { pattern: /\bguide\s+me\b/iu, weight: 1.2 },
+
+  // Advice phrasing
+  { pattern: /\bwhat\s+should\s+i\s+do\b/iu, weight: 1.3 },
+  { pattern: /\bplease\s+advise\b/iu, weight: 1.2 },
+
+  // Negative guards (optional: subtract score if present)
+  // If your engine supports negative weights or separate "negation" rules:
+  // e.g., "no need help", "don't help", "not asking for help"
+  { pattern: /\b(?:no\s+need|dont|don't|do\s+not)\s+(?:help|assist|support)\b/iu, weight: -1.0 },
+  // Avoid helpdesk/self-help false positives
+  { pattern: /\b(?:helpdesk|self-?help|help\s*(?:article|page|file|center|centre))\b/iu, weight: -0.8 },
+],
+
+  
 
   greeting: [
     // Main greeting list (from GREETING_BASE)
@@ -196,6 +225,7 @@ export const PATTERNS: Record<
     
     // Can't/won't patterns - specific phrases higher weight than troubleshooting (3.2) and generic negative (6.0)
     { pattern: /\b(?:i\s+)?(?:can(?:'|')?t|won(?:'|')?t)\b/iu, weight: 6.5 },
+    { pattern: /\b(?:can\s*not|cannot)\b/iu, weight: 6.3 },
     
     // Disagreement patterns - specific phrase higher weight
     { pattern: /\bdon(?:'|')?t\s+think\s+so\b/iu, weight: 6.5 },
